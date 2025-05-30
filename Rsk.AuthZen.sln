@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rsk.AuthZen.Client", "Rsk.AuthZen.Client\Rsk.AuthZen.Client.csproj", "{AB02B533-06C1-4E81-BDE6-19DE09EF429B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rsk.AuthZen.Client.Test", "Rsk.AuthZen.Client.Test\Rsk.AuthZen.Client.Test.csproj", "{34403A6D-D7DF-45E5-8754-AF74DEB97B10}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AB02B533-06C1-4E81-BDE6-19DE09EF429B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB02B533-06C1-4E81-BDE6-19DE09EF429B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB02B533-06C1-4E81-BDE6-19DE09EF429B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB02B533-06C1-4E81-BDE6-19DE09EF429B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34403A6D-D7DF-45E5-8754-AF74DEB97B10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34403A6D-D7DF-45E5-8754-AF74DEB97B10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34403A6D-D7DF-45E5-8754-AF74DEB97B10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34403A6D-D7DF-45E5-8754-AF74DEB97B10}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
