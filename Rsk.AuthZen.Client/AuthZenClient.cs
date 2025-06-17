@@ -11,7 +11,6 @@ using Rsk.AuthZen.Client.DTOs;
 
 namespace Rsk.AuthZen.Client
 {
-
     public class AuthZenClientOptions
     {
         public string AuthorizationUrl { get; set; }
@@ -24,7 +23,6 @@ namespace Rsk.AuthZen.Client
         internal const string EvaluationUri = "evaluation";
         internal const string BoxcarUri = "evaluations";
         private const string RequestIdHeader = "X-Request-ID";
-        
         
         private readonly HttpClient httpClient;
 
@@ -75,37 +73,88 @@ namespace Rsk.AuthZen.Client
                 authZenResponse.CorrelationId = requestIds.FirstOrDefault();
             }
 
-
             authZenResponse.Decision = responseDto.Decision ? Decision.Permit : Decision.Deny;
             authZenResponse.Context = responseDto.Context.ToString();
                 
             return authZenResponse;
         }
 
-        public Task<IEnumerable<AuthZenResponse>> Evaluate(IEnumerable<AuthZenEvaluationRequest> evaluationRequests, AuthZenEvaluationRequest requestDefaults)
+        public Task<AuthZenBoxcarResponse> Evaluate(AuthZenBoxcarRequest request, AuthZenBoxcarEvaluation defaults)
         {
-            return Evaluate(evaluationRequests, requestDefaults, null);
+            return Evaluate(request, defaults, null);
         }
 
-        public Task<IEnumerable<AuthZenResponse>> Evaluate(IEnumerable<AuthZenEvaluationRequest> evaluationRequests, AuthZenEvaluationRequest requestDefaults,
-            AuthZenBoxcarOptions boxcarOptions)
+        public async Task<AuthZenBoxcarResponse> Evaluate(AuthZenBoxcarRequest request, AuthZenBoxcarEvaluation defaults, AuthZenBoxcarOptions boxcarOptions)
         {
-            throw new NotImplementedException();
-        }
-    }
+            if (IsMultiEvaluationsMissing(request))
+            {
+                return await FallbackToSingleEvaluation(request, defaults);
+            }
+            
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{UriBase}/{BoxcarUri}", UriKind.Relative));
+            
+            if (request.CorrelationId != null)
+            {
+                requestMessage.Headers.Add(RequestIdHeader, request.CorrelationId);
+            }
+            
+            string requestJson = JsonSerializer.Serialize(request.ToDto(defaults, boxcarOptions), serializerOptions);
+            
+            HttpContent content = new StringContent(requestJson, Encoding.UTF8, AuthZenContentType);
+            requestMessage.Content = content;
+            
+            HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
+            
+            if (!responseMessage.IsSuccessStatusCode)
+            {
+                throw new AuthZenRequestFailureException($"Evaluation request failed with status code: {responseMessage.StatusCode}");
+            }
+            
+            string responseJson = await responseMessage.Content.ReadAsStringAsync();
+            
+            AuthZenBoxcarResponseDto responseDto = JsonSerializer.Deserialize<AuthZenBoxcarResponseDto>(responseJson, serializerOptions);
+            
+            var response = new AuthZenBoxcarResponse
+            {
+                Evaluations = responseDto.Evaluations.Select(e => new AuthZenResponse
+                {
+                    Decision = e.Decision ? Decision.Permit : Decision.Deny,
+                    Context = e.Context.ToString(),
+                }).ToList()
+            };
+            
+            if (responseMessage.Headers.TryGetValues(RequestIdHeader, out IEnumerable<string> requestIds))
+            {
+                response.CorrelationId = requestIds.FirstOrDefault();
+            }
 
-    public class AuthZenRequestFailureException : Exception
-    {
-        public AuthZenRequestFailureException()
-        {
+            return response;
         }
 
-        public AuthZenRequestFailureException(string message) : base(message)
+        private static bool IsMultiEvaluationsMissing(AuthZenBoxcarRequest request)
         {
+            return request.Evaluations == null || !request.Evaluations.Any();
         }
 
-        public AuthZenRequestFailureException(string message, Exception inner) : base(message, inner)
+        private async Task<AuthZenBoxcarResponse> FallbackToSingleEvaluation(AuthZenBoxcarRequest request, AuthZenBoxcarEvaluation defaults)
         {
+            var singleResponse = await Evaluate(new AuthZenEvaluationRequest()
+            {
+                Context = defaults.Context,
+                Subject = defaults.Subject,
+                Resource = defaults.Resource,
+                Action = defaults.Action,
+                CorrelationId = request.CorrelationId
+            });
+
+            return new AuthZenBoxcarResponse
+            {
+                Evaluations = new List<AuthZenResponse>
+                {
+                    singleResponse
+                },
+                CorrelationId = singleResponse.CorrelationId
+            };
         }
     }
 }

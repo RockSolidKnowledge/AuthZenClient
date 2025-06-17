@@ -24,11 +24,25 @@ public class AuthZenClientTests
     AuthZenClientOptions optionsValue;
     Mock<IOptions<AuthZenClientOptions>> options;
 
-    private const string simpleEvaluationResponse = """
-                                                    {
-                                                        "decision": true
-                                                    }
-                                                    """;
+    private const string simpleEvaluationResponse =
+        """
+        {
+            "decision": true
+        }
+        """;
+
+    private const string simpleBoxcarResponse =
+        """
+        {
+            "evaluations": [
+                {
+                    "decision": true
+                }
+            ],
+            "correlationId": "12345"
+        }
+        """;
+    
     public AuthZenClientTests()
     {
         httpClientFactory = new Mock<IHttpClientFactory>();
@@ -44,6 +58,65 @@ public class AuthZenClientTests
     private AuthZenClient CreateSut()
     {
         return new AuthZenClient(httpClientFactory?.Object, options?.Object);
+    }
+    
+    private async Task VerifyMissingRequestPartOmitsElement(AuthZenEvaluationRequest evaluationRequest, string expectedMissingElement)
+    {
+        HttpRequestMessage requestSent = null;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((r, c) => requestSent = r)
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(simpleEvaluationResponse)
+            });
+        
+        var sut = CreateSut();
+        
+        await sut.Evaluate(evaluationRequest);
+        
+        string sentContent = await requestSent.Content.ReadAsStringAsync();
+        
+        var json = JsonDocument.Parse(sentContent);
+        
+        json.RootElement.TryGetProperty(expectedMissingElement, out JsonElement _).Should().BeFalse();
+    }
+
+    private void AdjustRequestSerialization(AuthZenRequestMessageDto request)
+    {
+        AdjustDeserializedDictionary(request.Subject?.Properties);
+        AdjustDeserializedDictionary(request.Resource?.Properties);
+        AdjustDeserializedDictionary(request.Action?.Properties);
+        AdjustDeserializedDictionary(request.Context);
+    }
+    
+    private void AdjustBoxcarRequestSerialization(AuthZenBoxcarRequestMessageDto request)
+    {
+        AdjustDeserializedDictionary(request.Subject?.Properties);
+        AdjustDeserializedDictionary(request.Resource?.Properties);
+        AdjustDeserializedDictionary(request.Action?.Properties);
+        AdjustDeserializedDictionary(request.Context);
+    }
+
+    private void AdjustDeserializedDictionary(Dictionary<string,object> properties)
+    {
+        if (properties == null)
+        {
+            return;
+        }
+        
+        foreach (string key in properties.Keys)
+        {
+            if (properties[key] is JsonElement e)
+            {
+                properties[key] = e.ValueKind switch
+                {
+                    JsonValueKind.String => e.GetString(),
+                    _ => e
+                };
+
+            }
+        }
     }
     
     [Fact]
@@ -494,8 +567,830 @@ public class AuthZenClientTests
         
         authZenResponse.CorrelationId.Should().Be(expectedRequestId);
     }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsNoDefaults_ShouldPostToCorrectEndpoint()
+    {
+        HttpRequestMessage requestSent = null;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((r, c) => requestSent = r)
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(simpleBoxcarResponse)
+            });
+        
+        var sut = CreateSut();
 
-    private async Task VerifyMissingRequestPartOmitsElement(AuthZenEvaluationRequest evaluationRequest, string expectedMissingElement)
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>
+            {
+                new()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+
+        var defaults = new AuthZenBoxcarEvaluation();
+        
+        await sut.Evaluate(evaluationRequest, defaults);
+        
+        requestSent.Should().NotBeNull();
+        requestSent.Method.Should().Be(HttpMethod.Post);
+        requestSent.RequestUri.Should().Be($"{optionsValue.AuthorizationUrl}/{AuthZenClient.UriBase}/{AuthZenClient.BoxcarUri}");
+        requestSent.Content.Headers.ContentType.MediaType.Should().Be("application/json");
+    }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsNoDefaultsWithCorrelationId_ShouldAddRequestIdHeaderToRequest()
+    {
+        HttpRequestMessage requestSent = null;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((r, c) => requestSent = r)
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(simpleBoxcarResponse)
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            CorrelationId = Guid.NewGuid().ToString(),
+            Evaluations = new List<AuthZenBoxcarEvaluation>
+            {
+                new()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation();
+        
+        await sut.Evaluate(evaluationRequest, defaults);
+
+        requestSent.Headers
+            .Should()
+            .ContainSingle(h => h.Key == "X-Request-ID"
+                                && h.Value.Contains(evaluationRequest.CorrelationId));
+    }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsNoDefaults_ShouldPostSerializedRequestCorrectly()
+    {
+        HttpRequestMessage requestSent = null;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((r, c) => requestSent = r)
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(simpleBoxcarResponse)
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            CorrelationId = Guid.NewGuid().ToString(),
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation();
+        
+        await sut.Evaluate(evaluationRequest, defaults);
+        
+        string sentContent = await requestSent.Content.ReadAsStringAsync();
+        
+        AuthZenBoxcarRequestMessageDto deserializedRequest = JsonSerializer.Deserialize<AuthZenBoxcarRequestMessageDto>(sentContent,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
+        
+        AdjustBoxcarRequestSerialization(deserializedRequest);
+        
+        deserializedRequest.Should().BeEquivalentTo(evaluationRequest.ToDto());
+    }
+    
+    [Theory]
+    [InlineData("true", Decision.Permit)]
+    [InlineData("false", Decision.Deny)]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsNoDefaults_ShouldParseDecisionCorrectly(string jsonDecision, Decision expectedDecision)
+    {
+        string response =
+            $$"""
+                {
+                    "evaluations": [
+                        {
+                            "decision": {{jsonDecision}}
+                        },
+                        {
+                            "decision": {{jsonDecision}}
+                        }
+                    ]
+                }
+              """;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(response)
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest()
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject
+                                {
+                                    Id = "dasfgthb",
+                                    Type = "aerfbqret"
+                                }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation();
+        
+        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        
+        authZenResponse.Evaluations.Should().BeEquivalentTo(new List<AuthZenResponse>()
+        {
+            new ()
+            {
+                Decision = expectedDecision,
+                Context = ""
+            },
+            new ()
+            {
+                Decision = expectedDecision,
+                Context = ""
+            },
+        });
+    }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsNoDefaults_ShouldExtractContextCorrectly()
+    {
+        string context =
+            """
+               {
+                   "sjdo": "sdfb",
+                   "sdjfgn": 73,
+                   "sakjdhvuob":{
+                       "sdfbvbui":true,
+                       "hdfgouh": "iusdfvb"
+                   }
+               }
+            """;
+
+        string response =
+            $$"""
+                {
+                    "evaluations" :[
+                        {        
+                          "decision": false,
+                          "context": {{context}}
+                        }
+                    ]
+                }
+              """;
+        
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(response)                         
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject
+                                {
+                                    Id = "dasfgthb",
+                                    Type = "aerfbqret"
+                                }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation();
+        
+        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        
+        authZenResponse.Evaluations.Single().Context.Should().Be(context.Trim());
+    }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsNoDefaultsAndRequestFails_ShouldThrowAuthZenRequestFailureException()
+    {
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation();
+        
+        Func<Task> act = async () => await sut.Evaluate(evaluationRequest, defaults);
+        
+        await act.Should().ThrowAsync<AuthZenRequestFailureException>();
+    }
+        
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsNoDefaultsAndResponseContainsRequestId_ShouldAddValueToAuthZenResponse()
+    {
+        string expectedRequestId = "khsdfibsduvb";
+        string response = $$"""
+                              {
+                                  "evaluations" :[
+                                      {        
+                                        "decision": false
+                                      }
+                                  ]
+                              }
+                            """;
+        
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(response),
+                Headers = { { "X-Request-ID", expectedRequestId } }
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation();
+        
+        var authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        
+        authZenResponse.CorrelationId.Should().Be(expectedRequestId);
+    }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsWithDefaultValues_ShouldPostToCorrectEndpoint()
+    {
+        HttpRequestMessage requestSent = null;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((r, c) => requestSent = r)
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(simpleBoxcarResponse)
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>
+            {
+                new()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+
+        var defaults = new AuthZenBoxcarEvaluation()
+        {
+            Subject = new AuthZenSubject()
+            {
+                Id = "jk;dfgn",
+                Type = "jk;dfbgn;"
+            },
+            Resource = new AuthZenResource()
+            {
+                Type = "hjldfbg",
+                Id = "jkldfbgns"
+            },
+            Action = new AuthZenAction()
+            {
+                Name = "hjkldfgb"
+            }
+        };
+        
+        await sut.Evaluate(evaluationRequest, defaults);
+        
+        requestSent.Should().NotBeNull();
+        requestSent.Method.Should().Be(HttpMethod.Post);
+        requestSent.RequestUri.Should().Be($"{optionsValue.AuthorizationUrl}/{AuthZenClient.UriBase}/{AuthZenClient.BoxcarUri}");
+        requestSent.Content.Headers.ContentType.MediaType.Should().Be("application/json");
+    }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsWithDefaultValuesWithCorrelationId_ShouldAddRequestIdHeaderToRequest()
+    {
+        HttpRequestMessage requestSent = null;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((r, c) => requestSent = r)
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(simpleBoxcarResponse)
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            CorrelationId = Guid.NewGuid().ToString(),
+            Evaluations = new List<AuthZenBoxcarEvaluation>
+            {
+                new()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation()
+        {
+            Subject = new AuthZenSubject()
+            {
+                Id = "jk;dfgn",
+                Type = "jk;dfbgn;"
+            },
+            Resource = new AuthZenResource()
+            {
+                Type = "hjldfbg",
+                Id = "jkldfbgns"
+            },
+            Action = new AuthZenAction()
+            {
+                Name = "hjkldfgb"
+            }
+        };
+        
+        await sut.Evaluate(evaluationRequest, defaults);
+
+        requestSent.Headers
+            .Should()
+            .ContainSingle(h => h.Key == "X-Request-ID"
+                                && h.Value.Contains(evaluationRequest.CorrelationId));
+    }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsWithDefaultValues_ShouldPostSerializedRequestCorrectly()
+    {
+        HttpRequestMessage requestSent = null;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((r, c) => requestSent = r)
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(simpleBoxcarResponse)
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            CorrelationId = Guid.NewGuid().ToString(),
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation()
+        {
+            Subject = new AuthZenSubject()
+            {
+                Id = "jk;dfgn",
+                Type = "jk;dfbgn;"
+            },
+            Resource = new AuthZenResource()
+            {
+                Type = "hjldfbg",
+                Id = "jkldfbgns"
+            },
+            Action = new AuthZenAction()
+            {
+                Name = "hjkldfgb"
+            }
+        };
+        
+        await sut.Evaluate(evaluationRequest, defaults);
+        
+        string sentContent = await requestSent.Content.ReadAsStringAsync();
+        
+        AuthZenBoxcarRequestMessageDto deserializedRequest = JsonSerializer.Deserialize<AuthZenBoxcarRequestMessageDto>(sentContent,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
+        
+        AdjustBoxcarRequestSerialization(deserializedRequest);
+        
+        deserializedRequest.Should().BeEquivalentTo(evaluationRequest.ToDto(defaults));
+    }
+    
+    [Theory]
+    [InlineData("true", Decision.Permit)]
+    [InlineData("false", Decision.Deny)]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsWithDefaultValues_ShouldParseDecisionCorrectly(string jsonDecision, Decision expectedDecision)
+    {
+        string response =
+            $$"""
+                {
+                    "evaluations": [
+                        {
+                            "decision": {{jsonDecision}}
+                        },
+                        {
+                            "decision": {{jsonDecision}}
+                        }
+                    ]
+                }
+              """;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(response)
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest()
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject
+                                {
+                                    Id = "dasfgthb",
+                                    Type = "aerfbqret"
+                                }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation()
+        {
+            Subject = new AuthZenSubject()
+            {
+                Id = "jk;dfgn",
+                Type = "jk;dfbgn;"
+            },
+            Resource = new AuthZenResource()
+            {
+                Type = "hjldfbg",
+                Id = "jkldfbgns"
+            },
+            Action = new AuthZenAction()
+            {
+                Name = "hjkldfgb"
+            }
+        };
+        
+        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        
+        authZenResponse.Evaluations.Should().BeEquivalentTo(new List<AuthZenResponse>()
+        {
+            new ()
+            {
+                Decision = expectedDecision,
+                Context = ""
+            },
+            new ()
+            {
+                Decision = expectedDecision,
+                Context = ""
+            },
+        });
+    }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsWithDefaultValues_ShouldExtractContextCorrectly()
+    {
+        string context =
+            """
+               {
+                   "sjdo": "sdfb",
+                   "sdjfgn": 73,
+                   "sakjdhvuob":{
+                       "sdfbvbui":true,
+                       "hdfgouh": "iusdfvb"
+                   }
+               }
+            """;
+
+        string response =
+            $$"""
+                {
+                    "evaluations" :[
+                        {        
+                          "decision": false,
+                          "context": {{context}}
+                        }
+                    ]
+                }
+              """;
+        
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(response)                         
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject
+                                {
+                                    Id = "dasfgthb",
+                                    Type = "aerfbqret"
+                                }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation()
+        {
+            Subject = new AuthZenSubject()
+            {
+                Id = "jk;dfgn",
+                Type = "jk;dfbgn;"
+            },
+            Resource = new AuthZenResource()
+            {
+                Type = "hjldfbg",
+                Id = "jkldfbgns"
+            },
+            Action = new AuthZenAction()
+            {
+                Name = "hjkldfgb"
+            }
+        };
+        
+        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        
+        authZenResponse.Evaluations.Single().Context.Should().Be(context.Trim());
+    }
+    
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsWithDefaultValuesAndRequestFails_ShouldThrowAuthZenRequestFailureException()
+    {
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation()
+        {
+            Subject = new AuthZenSubject()
+            {
+                Id = "jk;dfgn",
+                Type = "jk;dfbgn;"
+            },
+            Resource = new AuthZenResource()
+            {
+                Type = "hjldfbg",
+                Id = "jkldfbgns"
+            },
+            Action = new AuthZenAction()
+            {
+                Name = "hjkldfgb"
+            }
+        };
+        
+        Func<Task> act = async () => await sut.Evaluate(evaluationRequest, defaults);
+        
+        await act.Should().ThrowAsync<AuthZenRequestFailureException>();
+    }
+        
+    [Fact]
+    public async Task Evaluate_WhenCalledWithMultipleEvaluationsWithDefaultValuesAndResponseContainsRequestId_ShouldAddValueToAuthZenResponse()
+    {
+        string expectedRequestId = "khsdfibsduvb";
+        string response = $$"""
+                              {
+                                  "evaluations" :[
+                                      {        
+                                        "decision": false
+                                      }
+                                  ]
+                              }
+                            """;
+        
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(response),
+                Headers = { { "X-Request-ID", expectedRequestId } }
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation()
+        {
+            Subject = new AuthZenSubject()
+            {
+                Id = "jk;dfgn",
+                Type = "jk;dfbgn;"
+            },
+            Resource = new AuthZenResource()
+            {
+                Type = "hjldfbg",
+                Id = "jkldfbgns"
+            },
+            Action = new AuthZenAction()
+            {
+                Name = "hjkldfgb"
+            }
+        };
+        
+        var authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        
+        authZenResponse.CorrelationId.Should().Be(expectedRequestId);
+    }
+    
+    [Theory]
+    [InlineData(BoxcarSemantics.DenyOnFirstDeny)]
+    [InlineData(BoxcarSemantics.ExecuteAll)]
+    [InlineData(BoxcarSemantics.PermitOnFirstPermit)]
+    public async Task Evaluate_WhenBoxCarOptions_ShouldApplyOptionsCorrectly(BoxcarSemantics semantics)
+    {
+        HttpRequestMessage requestSent = null;
+        httpMessageHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((r, c) => requestSent = r)
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(simpleBoxcarResponse)
+            });
+        
+        var sut = CreateSut();
+
+        var evaluationRequest = new AuthZenBoxcarRequest
+        {
+            CorrelationId = Guid.NewGuid().ToString(),
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            {
+                new()
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "dasfgthb",
+                        Type = "aerfbqret"
+                    }
+                }
+            }
+        };
+        
+        var defaults = new AuthZenBoxcarEvaluation()
+        {
+            Subject = new AuthZenSubject()
+            {
+                Id = "jk;dfgn",
+                Type = "jk;dfbgn;"
+            },
+            Resource = new AuthZenResource()
+            {
+                Type = "hjldfbg",
+                Id = "jkldfbgns"
+            },
+            Action = new AuthZenAction()
+            {
+                Name = "hjkldfgb"
+            }
+        };
+
+        var boxcarOptions = new AuthZenBoxcarOptions
+        {
+            Semantics = semantics
+        };
+        
+        await sut.Evaluate(evaluationRequest, defaults, boxcarOptions);
+        
+        string sentContent = await requestSent.Content.ReadAsStringAsync();
+        
+        AuthZenBoxcarRequestMessageDto deserializedRequest = JsonSerializer.Deserialize<AuthZenBoxcarRequestMessageDto>(sentContent,
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase});
+        
+        AdjustBoxcarRequestSerialization(deserializedRequest);
+
+        var expectation = evaluationRequest.ToDto(defaults, boxcarOptions);
+        deserializedRequest.Should().BeEquivalentTo(expectation);
+    }
+
+    [Fact]
+    public async Task Evaluate_WhenBoxCarEvaluationsIsMissing_ShouldFallbackToSingleEvaluation()
     {
         HttpRequestMessage requestSent = null;
         httpMessageHandler.Protected()
@@ -507,37 +1402,35 @@ public class AuthZenClientTests
             });
         
         var sut = CreateSut();
-        
-        await sut.Evaluate(evaluationRequest);
-        
-        string sentContent = await requestSent.Content.ReadAsStringAsync();
-        
-        var json = JsonDocument.Parse(sentContent);
-        
-        json.RootElement.TryGetProperty(expectedMissingElement, out JsonElement _).Should().BeFalse();
-    }
 
-    private void AdjustRequestSerialization(AuthZenRequestMessageDto request)
-    {
-        AdjustDeserializedDictionary(request.Subject?.Properties);
-        AdjustDeserializedDictionary(request.Resource?.Properties);
-        AdjustDeserializedDictionary(request.Action?.Properties);
-        AdjustDeserializedDictionary(request.Context);
-    }
-
-    private void AdjustDeserializedDictionary(Dictionary<string,object> properties)
-    {
-        foreach (string key in properties.Keys)
+        var evaluationRequest = new AuthZenBoxcarRequest
         {
-            if (properties[key] is JsonElement e)
-            {
-                properties[key] = e.ValueKind switch
-                {
-                    JsonValueKind.String => e.GetString(),
-                    _ => e
-                };
+            Evaluations = new List<AuthZenBoxcarEvaluation>()
+        };
 
+        var defaults = new AuthZenBoxcarEvaluation
+        {
+            Subject = new AuthZenSubject
+            {
+                Id = "jk;dfgn",
+                Type = "jk;dfbgn;"
+            },
+            Resource = new AuthZenResource
+            {
+                Type = "hjldfbg",
+                Id = "jkldfbgns"
+            },
+            Action = new AuthZenAction
+            {
+                Name = "hjkldfgb"
             }
-        }
+        };
+        
+        await sut.Evaluate(evaluationRequest, defaults);
+        
+        requestSent.Should().NotBeNull();
+        requestSent.Method.Should().Be(HttpMethod.Post);
+        requestSent.RequestUri.Should().Be($"{optionsValue.AuthorizationUrl}/{AuthZenClient.UriBase}/{AuthZenClient.EvaluationUri}");
+        requestSent.Content.Headers.ContentType.MediaType.Should().Be("application/json");
     }
 }
