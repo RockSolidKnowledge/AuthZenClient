@@ -6,14 +6,9 @@ namespace Rsk.AuthZen.Client
     public interface IAuthZenClient
     {
         Task<AuthZenResponse> Evaluate(
-            AuthZenPayload<AuthZenEvaluationRequest> evaluationRequest);
+            AuthZenPayload<AuthZenSingleEvaluationRequest> request);
 
         Task<AuthZenBoxcarResponse> Evaluate(
-            AuthZenPayload<AuthZenBoxcarRequest> request);
-
-        // Task<AuthZenBoxcarResponse> Evaluate(
-        //     AuthZenBoxcarRequest request, 
-        //     AuthZenBoxcarEvaluation defaults,
-        //     AuthZenBoxcarOptions boxcarOptions);
+            AuthZenPayload<AuthZenBoxcarEvaluationRequest> request);
     }
 }

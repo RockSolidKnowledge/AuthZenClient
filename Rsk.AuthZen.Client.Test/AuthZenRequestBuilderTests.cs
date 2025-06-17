@@ -161,31 +161,31 @@ public class AuthZenRequestBuilderTests
             .Add(contextProperty2, contextProperty2Value)
             .Add(contextProperty3, contextProperty3Value);
         
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
         result.Should().NotBeNull();
         
-        result.Subject.Id.Should().Be(subjectId);
-        result.Subject.Type.Should().Be(subjectType);
-        result.Subject.Properties.Should().HaveCount(2);
-        result.Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty1 && kv.Value.Equals(subjectProperty1Value));
-        result.Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty2 && kv.Value.Equals(subjectProperty2Value));
+        result.Payload.Subject.Id.Should().Be(subjectId);
+        result.Payload.Subject.Type.Should().Be(subjectType);
+        result.Payload.Subject.Properties.Should().HaveCount(2);
+        result.Payload.Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty1 && kv.Value.Equals(subjectProperty1Value));
+        result.Payload.Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty2 && kv.Value.Equals(subjectProperty2Value));
 
-        result.Resource.Id.Should().Be(resourceId);
-        result.Resource.Type.Should().Be(resourceType);
-        result.Resource.Properties.Should().HaveCount(2);
-        result.Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty1 && kv.Value.Equals(resourceProperty1Value));
-        result.Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty2 && kv.Value.Equals(resourceProperty2Value));
+        result.Payload.Resource.Id.Should().Be(resourceId);
+        result.Payload.Resource.Type.Should().Be(resourceType);
+        result.Payload.Resource.Properties.Should().HaveCount(2);
+        result.Payload.Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty1 && kv.Value.Equals(resourceProperty1Value));
+        result.Payload.Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty2 && kv.Value.Equals(resourceProperty2Value));
 
-        result.Action.Name.Should().Be(actionName);
-        result.Action.Properties.Should().HaveCount(2);
-        result.Action.Properties.Should().Contain(kv => kv.Key == actionProperty1 && kv.Value.Equals(actionProperty1Value));
-        result.Action.Properties.Should().Contain(kv => kv.Key == actionProperty2 && kv.Value.Equals(actionProperty2Value));
+        result.Payload.Action.Name.Should().Be(actionName);
+        result.Payload.Action.Properties.Should().HaveCount(2);
+        result.Payload.Action.Properties.Should().Contain(kv => kv.Key == actionProperty1 && kv.Value.Equals(actionProperty1Value));
+        result.Payload.Action.Properties.Should().Contain(kv => kv.Key == actionProperty2 && kv.Value.Equals(actionProperty2Value));
         
-        result.Context.Should().HaveCount(3);
-        result.Context.Should().Contain(kv => kv.Key == contextProperty1 && kv.Value.Equals(contextProperty1Value));
-        result.Context.Should().Contain(kv => kv.Key == contextProperty2 && kv.Value.Equals(contextProperty2Value));
-        result.Context.Should().Contain(kv => kv.Key == contextProperty3 && kv.Value.Equals(contextProperty3Value));
+        result.Payload.Context.Should().HaveCount(3);
+        result.Payload.Context.Should().Contain(kv => kv.Key == contextProperty1 && kv.Value.Equals(contextProperty1Value));
+        result.Payload.Context.Should().Contain(kv => kv.Key == contextProperty2 && kv.Value.Equals(contextProperty2Value));
+        result.Payload.Context.Should().Contain(kv => kv.Key == contextProperty3 && kv.Value.Equals(contextProperty3Value));
     }
     
     [Fact]
@@ -202,9 +202,9 @@ public class AuthZenRequestBuilderTests
         sut.SetContext()
             .Add("iuhdcv8", 76.5m);
 
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
-        result.Subject.Should().BeNull();
+        result.Payload.Subject.Should().BeNull();
     }
     
     [Fact]
@@ -221,9 +221,9 @@ public class AuthZenRequestBuilderTests
         sut.SetContext()
             .Add("iuhdcv8", 76.5m);
 
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
-        result.Resource.Should().BeNull();
+        result.Payload.Resource.Should().BeNull();
     }
 
     [Fact]
@@ -240,9 +240,9 @@ public class AuthZenRequestBuilderTests
         sut.SetContext()
             .Add("iuhdcv8", 76.5m);
 
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
-        result.Action.Should().BeNull();
+        result.Payload.Action.Should().BeNull();
     }
     
     [Fact]
@@ -259,9 +259,9 @@ public class AuthZenRequestBuilderTests
         sut.SetAction("oihsxdfbvh")
             .Add("iuhdcv8", 76.5m);
 
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
-        result.Context.Should().BeNull();
+        result.Payload.Context.Should().BeNull();
     }
     
     [Fact]
@@ -271,9 +271,9 @@ public class AuthZenRequestBuilderTests
 
         sut.SetSubject("lkjshdv", "loikjhv");
 
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
-        result.Subject.Properties.Should().BeNull();
+        result.Payload.Subject.Properties.Should().BeNull();
     }
     
     [Fact]
@@ -283,9 +283,9 @@ public class AuthZenRequestBuilderTests
 
         sut.SetResource("lkjshdv", "loikjhv");
 
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
-        result.Resource.Properties.Should().BeNull();
+        result.Payload.Resource.Properties.Should().BeNull();
     }
     
     [Fact]
@@ -295,9 +295,9 @@ public class AuthZenRequestBuilderTests
 
         sut.SetAction("lkjshdv");
 
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
-        result.Action.Properties.Should().BeNull();
+        result.Payload.Action.Properties.Should().BeNull();
     }
     
     [Fact]
@@ -307,9 +307,9 @@ public class AuthZenRequestBuilderTests
 
         sut.SetContext();
 
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
-        result.Context.Should().BeNull();
+        result.Payload.Context.Should().BeNull();
     }
     
     [Fact]
@@ -344,7 +344,7 @@ public class AuthZenRequestBuilderTests
 
         sut.SetCorrelationId(expectedCorrelationId);
 
-        AuthZenEvaluationRequest result = sut.Build();
+        var result = sut.Build();
         
         result.CorrelationId.Should().Be(expectedCorrelationId);
     }

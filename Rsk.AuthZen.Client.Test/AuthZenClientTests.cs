@@ -60,7 +60,7 @@ public class AuthZenClientTests
         return new AuthZenClient(httpClientFactory?.Object, options?.Object);
     }
     
-    private async Task VerifyMissingRequestPartOmitsElement(AuthZenEvaluationRequest evaluationRequest, string expectedMissingElement)
+    private async Task VerifyMissingRequestPartOmitsElement(AuthZenPayload<AuthZenSingleEvaluationRequest> singleEvaluationRequest, string expectedMissingElement)
     {
         HttpRequestMessage requestSent = null;
         httpMessageHandler.Protected()
@@ -73,7 +73,7 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
         
-        await sut.Evaluate(evaluationRequest);
+        await sut.Evaluate(singleEvaluationRequest);
         
         string sentContent = await requestSent.Content.ReadAsStringAsync();
         
@@ -182,12 +182,15 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest()
             {
-                Id = "dasfgthb",
-                Type = "aerfbqret"
+                Subject = new AuthZenSubject
+                {
+                    Id = "dasfgthb",
+                    Type = "aerfbqret"
+                }
             }
         };
         
@@ -213,12 +216,15 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest
             {
-                Id = "dasfgthb",
-                Type = "aerfbqret"
+                Subject = new AuthZenSubject
+                {
+                    Id = "dasfgthb",
+                    Type = "aerfbqret"
+                },
             },
             CorrelationId = "pioxjhdfvbghdsfohiv"
         };
@@ -243,42 +249,45 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest()
             {
-                Id = "dasfgthb",
-                Type = "aerfbqret",
-                Properties = new Dictionary<string, object>
+                Subject = new AuthZenSubject
                 {
-                    { "dfgbfd", "sdfbf" },
-                    { "sdfbfdsb", "sdfbsdf" }
-                }
-            },
-            Resource = new AuthZenResource
-            {
-                Id = "fdgn",
-                Type = "bfda",
-                Properties = new Dictionary<string, object>
+                    Id = "dasfgthb",
+                    Type = "aerfbqret",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "dfgbfd", "sdfbf" },
+                        { "sdfbfdsb", "sdfbsdf" }
+                    }
+                },
+                Resource = new AuthZenResource
                 {
-                    { "dgfnsg", "bnfa" },
-                    { "bfea", "fba" }
-                }
-            },
-            Action = new AuthZenAction
-            {
-                Name = "paioshd",
-                Properties = new Dictionary<string, object>
+                    Id = "fdgn",
+                    Type = "bfda",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "dgfnsg", "bnfa" },
+                        { "bfea", "fba" }
+                    }
+                },
+                Action = new AuthZenAction
                 {
-                    { "bdfaa", "aefdba" },
-                    { "aedfb", "bfda" }
-                }
-            },
-            Context = new Dictionary<string, object>
+                    Name = "paioshd",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "bdfaa", "aefdba" },
+                        { "aedfb", "bfda" }
+                    }
+                },
+                Context = new Dictionary<string, object>
                 {
                     { "dabgn", "bfra" },
                     { "htearha", "erhaer" }
                 }
+            }
         };
         
         await sut.Evaluate(evaluationRequest);
@@ -290,38 +299,41 @@ public class AuthZenClientTests
         
         AdjustRequestSerialization(deserializedRequest);
         
-        deserializedRequest.Should().BeEquivalentTo(evaluationRequest.ToDto());
+        deserializedRequest.Should().BeEquivalentTo(evaluationRequest.Payload.ToDto());
     }
     
     [Fact]
     public async Task Evaluate_WhenCalledWithSingleEvaluationAndNoSubject_ShouldNotSerializeSubject()
     {
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Resource = new AuthZenResource
+            Payload = new AuthZenSingleEvaluationRequest()
             {
-                Id = "fdgn",
-                Type = "bfda",
-                Properties = new Dictionary<string, object>
+                Resource = new AuthZenResource
                 {
-                    { "dgfnsg", "bnfa" },
-                    { "bfea", "fba" }
-                }
-            },
-            Action = new AuthZenAction
-            {
-                Name = "paioshd",
-                Properties = new Dictionary<string, object>
+                    Id = "fdgn",
+                    Type = "bfda",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "dgfnsg", "bnfa" },
+                        { "bfea", "fba" }
+                    }
+                },
+                Action = new AuthZenAction
                 {
-                    { "bdfaa", "aefdba" },
-                    { "aedfb", "bfda" }
-                }
-            },
-            Context = new Dictionary<string, object>
+                    Name = "paioshd",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "bdfaa", "aefdba" },
+                        { "aedfb", "bfda" }
+                    }
+                },
+                Context = new Dictionary<string, object>
                 {
                     { "dabgn", "bfra" },
                     { "htearha", "erhaer" }
                 }
+            }
         };
         
         await VerifyMissingRequestPartOmitsElement(evaluationRequest, "subject");
@@ -330,32 +342,35 @@ public class AuthZenClientTests
     [Fact]
     public async Task Evaluate_WhenCalledWithSingleEvaluationAndNoResource_ShouldNotSerializeResource()
     {
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest()
             {
-                Id = "fdgn",
-                Type = "bfda",
-                Properties = new Dictionary<string, object>
+                Subject = new AuthZenSubject
                 {
-                    { "dgfnsg", "bnfa" },
-                    { "bfea", "fba" }
-                }
-            },
-            Action = new AuthZenAction
-            {
-                Name = "paioshd",
-                Properties = new Dictionary<string, object>
+                    Id = "fdgn",
+                    Type = "bfda",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "dgfnsg", "bnfa" },
+                        { "bfea", "fba" }
+                    }
+                },
+                Action = new AuthZenAction
                 {
-                    { "bdfaa", "aefdba" },
-                    { "aedfb", "bfda" }
-                }
-            },
-            Context = new Dictionary<string, object>
+                    Name = "paioshd",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "bdfaa", "aefdba" },
+                        { "aedfb", "bfda" }
+                    }
+                },
+                Context = new Dictionary<string, object>
                 {
                     { "dabgn", "bfra" },
                     { "htearha", "erhaer" }
                 }
+            }
         };
 
         await VerifyMissingRequestPartOmitsElement(evaluationRequest, "resource");
@@ -364,32 +379,36 @@ public class AuthZenClientTests
     [Fact]
     public async Task Evaluate_WhenCalledWithSingleEvaluationAndNoAction_ShouldNotSerializeAction()
     {
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest()
+
             {
-                Id = "fdgn",
-                Type = "bfda",
-                Properties = new Dictionary<string, object>
+                Subject = new AuthZenSubject
                 {
-                    { "dgfnsg", "bnfa" },
-                    { "bfea", "fba" }
-                }
-            },
-            Resource = new AuthZenResource
-            {
-                Id = "asdefhb",
-                Type = "aehb",
-                Properties = new Dictionary<string, object>
+                    Id = "fdgn",
+                    Type = "bfda",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "dgfnsg", "bnfa" },
+                        { "bfea", "fba" }
+                    }
+                },
+                Resource = new AuthZenResource
                 {
-                    { "bre", "asreh" },
-                }
-            },
-            Context = new Dictionary<string, object>
+                    Id = "asdefhb",
+                    Type = "aehb",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "bre", "asreh" },
+                    }
+                },
+                Context = new Dictionary<string, object>
                 {
                     { "dabgn", "bfra" },
                     { "htearha", "erhaer" }
                 }
+            }
         };
 
         await VerifyMissingRequestPartOmitsElement(evaluationRequest, "action");
@@ -398,34 +417,37 @@ public class AuthZenClientTests
     [Fact]
     public async Task Evaluate_WhenCalledWithSingleEvaluationAndNoContext_ShouldNotSerializeContext()
     {
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest()
             {
-                Id = "fdgn",
-                Type = "bfda",
-                Properties = new Dictionary<string, object>
+                Subject = new AuthZenSubject
                 {
-                    { "dgfnsg", "bnfa" },
-                    { "bfea", "fba" }
-                }
-            },
-            Resource = new AuthZenResource
-            {
-                Id = "asdefhb",
-                Type = "aehb",
-                Properties = new Dictionary<string, object>
+                    Id = "fdgn",
+                    Type = "bfda",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "dgfnsg", "bnfa" },
+                        { "bfea", "fba" }
+                    }
+                },
+                Resource = new AuthZenResource
                 {
-                    { "bre", "asreh" },
-                }
-            },
-            Action = new AuthZenAction
-            {
-                Name = "paioshd",
-                Properties = new Dictionary<string, object>
+                    Id = "asdefhb",
+                    Type = "aehb",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "bre", "asreh" },
+                    }
+                },
+                Action = new AuthZenAction
                 {
-                    { "dabgn", "bfra" },
-                    { "htearha", "erhaer" }
+                    Name = "paioshd",
+                    Properties = new Dictionary<string, object>
+                    {
+                        { "dabgn", "bfra" },
+                        { "htearha", "erhaer" }
+                    }
                 }
             }
         };
@@ -452,12 +474,15 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest()
             {
-                Id = "dasfgthb",
-                Type = "aerfbqret"
+                Subject = new AuthZenSubject
+                {
+                    Id = "dasfgthb",
+                    Type = "aerfbqret"
+                }
             }
         };
         
@@ -496,12 +521,15 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest()
             {
-                Id = "dasfgthb",
-                Type = "aerfbqret"
+                Subject = new AuthZenSubject
+                {
+                    Id = "dasfgthb",
+                    Type = "aerfbqret"
+                }
             }
         };
         
@@ -520,12 +548,15 @@ public class AuthZenClientTests
 
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest()
             {
-                Id = "dasfgthb",
-                Type = "aerfbqret"
+                Subject = new AuthZenSubject
+                {
+                    Id = "dasfgthb",
+                    Type = "aerfbqret"
+                }
             }
         };
         
@@ -554,12 +585,15 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenEvaluationRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
         {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenSingleEvaluationRequest()
             {
-                Id = "dasfgthb",
-                Type = "aerfbqret"
+                Subject = new AuthZenSubject
+                {
+                    Id = "dasfgthb",
+                    Type = "aerfbqret"
+                }
             }
         };
         
@@ -582,24 +616,27 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new()
+                Evaluations = new List<AuthZenBoxcarEvaluation>
                 {
-                    Subject = new AuthZenSubject
+                    new()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
                     }
-                }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
             }
         };
-
-        var defaults = new AuthZenBoxcarEvaluation();
         
-        await sut.Evaluate(evaluationRequest, defaults);
+        
+        await sut.Evaluate(evaluationRequest);
         
         requestSent.Should().NotBeNull();
         requestSent.Method.Should().Be(HttpMethod.Post);
@@ -621,25 +658,27 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>
         {
             CorrelationId = Guid.NewGuid().ToString(),
-            Evaluations = new List<AuthZenBoxcarEvaluation>
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new()
+                Evaluations = new List<AuthZenBoxcarEvaluation>
                 {
-                    Subject = new AuthZenSubject
+                    new()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
                     }
-                }
-            }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
+            },
         };
         
-        var defaults = new AuthZenBoxcarEvaluation();
-        
-        await sut.Evaluate(evaluationRequest, defaults);
+        await sut.Evaluate(evaluationRequest);
 
         requestSent.Headers
             .Should()
@@ -661,25 +700,27 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>
         {
             CorrelationId = Guid.NewGuid().ToString(),
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
+                    new()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
                     }
-                }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation();
-        
-        await sut.Evaluate(evaluationRequest, defaults);
+        await sut.Evaluate(evaluationRequest);
         
         string sentContent = await requestSent.Content.ReadAsStringAsync();
         
@@ -688,7 +729,7 @@ public class AuthZenClientTests
         
         AdjustBoxcarRequestSerialization(deserializedRequest);
         
-        deserializedRequest.Should().BeEquivalentTo(evaluationRequest.ToDto());
+        deserializedRequest.Should().BeEquivalentTo(evaluationRequest.Payload.ToDto());
     }
     
     [Theory]
@@ -718,24 +759,25 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest()
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new AuthZenBoxcarEvaluation()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
-                                {
-                                    Id = "dasfgthb",
-                                    Type = "aerfbqret"
-                                }
+                    new AuthZenBoxcarEvaluation()
+                    {
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
+                    }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation();
-        
-        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest);
         
         authZenResponse.Evaluations.Should().BeEquivalentTo(new List<AuthZenResponse>()
         {
@@ -788,24 +830,25 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest
             {
-                new AuthZenBoxcarEvaluation()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
-                                {
-                                    Id = "dasfgthb",
-                                    Type = "aerfbqret"
-                                }
+                    new AuthZenBoxcarEvaluation()
+                    {
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
+                    }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation();
-        
-        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest);
         
         authZenResponse.Evaluations.Single().Context.Should().Be(context.Trim());
     }
@@ -820,24 +863,25 @@ public class AuthZenClientTests
 
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest
             {
-                new AuthZenBoxcarEvaluation()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
+                    new AuthZenBoxcarEvaluation()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
                     }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation();
-        
-        Func<Task> act = async () => await sut.Evaluate(evaluationRequest, defaults);
+        Func<Task> act = async () => await sut.Evaluate(evaluationRequest);
         
         await act.Should().ThrowAsync<AuthZenRequestFailureException>();
     }
@@ -866,24 +910,27 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new AuthZenBoxcarEvaluation()
+
+
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
+                    new AuthZenBoxcarEvaluation()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
                     }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation();
-        
-        var authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        var authZenResponse = await sut.Evaluate(evaluationRequest);
         
         authZenResponse.CorrelationId.Should().Be(expectedRequestId);
     }
@@ -902,40 +949,42 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new()
+                Evaluations = new List<AuthZenBoxcarEvaluation>
                 {
-                    Subject = new AuthZenSubject
+                    new()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
+                    }
+                }, 
+                DefaultValues = new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject()
+                    {
+                        Id = "jk;dfgn",
+                        Type = "jk;dfbgn;"
+                    },
+                    Resource = new AuthZenResource()
+                    {
+                        Type = "hjldfbg",
+                        Id = "jkldfbgns"
+                    },
+                    Action = new AuthZenAction()
+                    {
+                        Name = "hjkldfgb"
                     }
                 }
             }
         };
-
-        var defaults = new AuthZenBoxcarEvaluation()
-        {
-            Subject = new AuthZenSubject()
-            {
-                Id = "jk;dfgn",
-                Type = "jk;dfbgn;"
-            },
-            Resource = new AuthZenResource()
-            {
-                Type = "hjldfbg",
-                Id = "jkldfbgns"
-            },
-            Action = new AuthZenAction()
-            {
-                Name = "hjkldfgb"
-            }
-        };
         
-        await sut.Evaluate(evaluationRequest, defaults);
+        await sut.Evaluate(evaluationRequest);
         
         requestSent.Should().NotBeNull();
         requestSent.Method.Should().Be(HttpMethod.Post);
@@ -957,41 +1006,45 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>()
         {
             CorrelationId = Guid.NewGuid().ToString(),
-            Evaluations = new List<AuthZenBoxcarEvaluation>
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new()
+
+
+                Evaluations = new List<AuthZenBoxcarEvaluation>
                 {
-                    Subject = new AuthZenSubject
+                    new()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
+                    }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject()
+                    {
+                        Id = "jk;dfgn",
+                        Type = "jk;dfbgn;"
+                    },
+                    Resource = new AuthZenResource()
+                    {
+                        Type = "hjldfbg",
+                        Id = "jkldfbgns"
+                    },
+                    Action = new AuthZenAction()
+                    {
+                        Name = "hjkldfgb"
                     }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation()
-        {
-            Subject = new AuthZenSubject()
-            {
-                Id = "jk;dfgn",
-                Type = "jk;dfbgn;"
-            },
-            Resource = new AuthZenResource()
-            {
-                Type = "hjldfbg",
-                Id = "jkldfbgns"
-            },
-            Action = new AuthZenAction()
-            {
-                Name = "hjkldfgb"
-            }
-        };
-        
-        await sut.Evaluate(evaluationRequest, defaults);
+        await sut.Evaluate(evaluationRequest);
 
         requestSent.Headers
             .Should()
@@ -1013,41 +1066,43 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>()
         {
             CorrelationId = Guid.NewGuid().ToString(),
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
+                    new()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
+                    }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject()
+                    {
+                        Id = "jk;dfgn",
+                        Type = "jk;dfbgn;"
+                    },
+                    Resource = new AuthZenResource()
+                    {
+                        Type = "hjldfbg",
+                        Id = "jkldfbgns"
+                    },
+                    Action = new AuthZenAction()
+                    {
+                        Name = "hjkldfgb"
                     }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation()
-        {
-            Subject = new AuthZenSubject()
-            {
-                Id = "jk;dfgn",
-                Type = "jk;dfbgn;"
-            },
-            Resource = new AuthZenResource()
-            {
-                Type = "hjldfbg",
-                Id = "jkldfbgns"
-            },
-            Action = new AuthZenAction()
-            {
-                Name = "hjkldfgb"
-            }
-        };
-        
-        await sut.Evaluate(evaluationRequest, defaults);
+        await sut.Evaluate(evaluationRequest);
         
         string sentContent = await requestSent.Content.ReadAsStringAsync();
         
@@ -1056,7 +1111,7 @@ public class AuthZenClientTests
         
         AdjustBoxcarRequestSerialization(deserializedRequest);
         
-        deserializedRequest.Should().BeEquivalentTo(evaluationRequest.ToDto(defaults));
+        deserializedRequest.Should().BeEquivalentTo(evaluationRequest.Payload.ToDto());
     }
     
     [Theory]
@@ -1086,40 +1141,42 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest()
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>()
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new AuthZenBoxcarEvaluation()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
-                                {
-                                    Id = "dasfgthb",
-                                    Type = "aerfbqret"
-                                }
+                    new AuthZenBoxcarEvaluation()
+                    {
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
+                    }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject()
+                    {
+                        Id = "jk;dfgn",
+                        Type = "jk;dfbgn;"
+                    },
+                    Resource = new AuthZenResource()
+                    {
+                        Type = "hjldfbg",
+                        Id = "jkldfbgns"
+                    },
+                    Action = new AuthZenAction()
+                    {
+                        Name = "hjkldfgb"
+                    }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation()
-        {
-            Subject = new AuthZenSubject()
-            {
-                Id = "jk;dfgn",
-                Type = "jk;dfbgn;"
-            },
-            Resource = new AuthZenResource()
-            {
-                Type = "hjldfbg",
-                Id = "jkldfbgns"
-            },
-            Action = new AuthZenAction()
-            {
-                Name = "hjkldfgb"
-            }
-        };
-        
-        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest);
         
         authZenResponse.Evaluations.Should().BeEquivalentTo(new List<AuthZenResponse>()
         {
@@ -1172,46 +1229,49 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>()
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new AuthZenBoxcarEvaluation()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
-                                {
-                                    Id = "dasfgthb",
-                                    Type = "aerfbqret"
-                                }
+                    new AuthZenBoxcarEvaluation()
+                    {
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
+                    }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject()
+                    {
+                        Id = "jk;dfgn",
+                        Type = "jk;dfbgn;"
+                    },
+                    Resource = new AuthZenResource()
+                    {
+                        Type = "hjldfbg",
+                        Id = "jkldfbgns"
+                    },
+                    Action = new AuthZenAction()
+                    {
+                        Name = "hjkldfgb"
+                    }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation()
-        {
-            Subject = new AuthZenSubject()
-            {
-                Id = "jk;dfgn",
-                Type = "jk;dfbgn;"
-            },
-            Resource = new AuthZenResource()
-            {
-                Type = "hjldfbg",
-                Id = "jkldfbgns"
-            },
-            Action = new AuthZenAction()
-            {
-                Name = "hjkldfgb"
-            }
-        };
-        
-        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        AuthZenBoxcarResponse authZenResponse = await sut.Evaluate(evaluationRequest);
         
         authZenResponse.Evaluations.Single().Context.Should().Be(context.Trim());
     }
-    
+
     [Fact]
-    public async Task Evaluate_WhenCalledWithMultipleEvaluationsWithDefaultValuesAndRequestFails_ShouldThrowAuthZenRequestFailureException()
+    public async Task
+        Evaluate_WhenCalledWithMultipleEvaluationsWithDefaultValuesAndRequestFails_ShouldThrowAuthZenRequestFailureException()
     {
         httpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(),
@@ -1220,40 +1280,42 @@ public class AuthZenClientTests
 
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>()
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new AuthZenBoxcarEvaluation()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
+                    new AuthZenBoxcarEvaluation()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
+                    }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject()
+                    {
+                        Id = "jk;dfgn",
+                        Type = "jk;dfbgn;"
+                    },
+                    Resource = new AuthZenResource()
+                    {
+                        Type = "hjldfbg",
+                        Id = "jkldfbgns"
+                    },
+                    Action = new AuthZenAction()
+                    {
+                        Name = "hjkldfgb"
                     }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation()
-        {
-            Subject = new AuthZenSubject()
-            {
-                Id = "jk;dfgn",
-                Type = "jk;dfbgn;"
-            },
-            Resource = new AuthZenResource()
-            {
-                Type = "hjldfbg",
-                Id = "jkldfbgns"
-            },
-            Action = new AuthZenAction()
-            {
-                Name = "hjkldfgb"
-            }
-        };
-        
-        Func<Task> act = async () => await sut.Evaluate(evaluationRequest, defaults);
+        Func<Task> act = async () => await sut.Evaluate(evaluationRequest);
         
         await act.Should().ThrowAsync<AuthZenRequestFailureException>();
     }
@@ -1282,40 +1344,42 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>()
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new AuthZenBoxcarEvaluation()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
+                    new AuthZenBoxcarEvaluation()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
+                    }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject()
+                    {
+                        Id = "jk;dfgn",
+                        Type = "jk;dfbgn;"
+                    },
+                    Resource = new AuthZenResource()
+                    {
+                        Type = "hjldfbg",
+                        Id = "jkldfbgns"
+                    },
+                    Action = new AuthZenAction()
+                    {
+                        Name = "hjkldfgb"
                     }
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation()
-        {
-            Subject = new AuthZenSubject()
-            {
-                Id = "jk;dfgn",
-                Type = "jk;dfbgn;"
-            },
-            Resource = new AuthZenResource()
-            {
-                Type = "hjldfbg",
-                Id = "jkldfbgns"
-            },
-            Action = new AuthZenAction()
-            {
-                Name = "hjkldfgb"
-            }
-        };
-        
-        var authZenResponse = await sut.Evaluate(evaluationRequest, defaults);
+        var authZenResponse = await sut.Evaluate(evaluationRequest);
         
         authZenResponse.CorrelationId.Should().Be(expectedRequestId);
     }
@@ -1337,46 +1401,47 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>()
         {
             CorrelationId = Guid.NewGuid().ToString(),
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                new()
+                Evaluations = new List<AuthZenBoxcarEvaluation>()
                 {
-                    Subject = new AuthZenSubject
+                    new()
                     {
-                        Id = "dasfgthb",
-                        Type = "aerfbqret"
+                        Subject = new AuthZenSubject
+                        {
+                            Id = "dasfgthb",
+                            Type = "aerfbqret"
+                        }
                     }
+                },
+                DefaultValues = new AuthZenBoxcarEvaluation()
+                {
+                    Subject = new AuthZenSubject()
+                    {
+                        Id = "jk;dfgn",
+                        Type = "jk;dfbgn;"
+                    },
+                    Resource = new AuthZenResource()
+                    {
+                        Type = "hjldfbg",
+                        Id = "jkldfbgns"
+                    },
+                    Action = new AuthZenAction()
+                    {
+                        Name = "hjkldfgb"
+                    }
+                },
+                Options = new AuthZenBoxcarOptions
+                {
+                    Semantics = semantics
                 }
             }
         };
         
-        var defaults = new AuthZenBoxcarEvaluation()
-        {
-            Subject = new AuthZenSubject()
-            {
-                Id = "jk;dfgn",
-                Type = "jk;dfbgn;"
-            },
-            Resource = new AuthZenResource()
-            {
-                Type = "hjldfbg",
-                Id = "jkldfbgns"
-            },
-            Action = new AuthZenAction()
-            {
-                Name = "hjkldfgb"
-            }
-        };
-
-        var boxcarOptions = new AuthZenBoxcarOptions
-        {
-            Semantics = semantics
-        };
-        
-        await sut.Evaluate(evaluationRequest, defaults, boxcarOptions);
+        await sut.Evaluate(evaluationRequest);
         
         string sentContent = await requestSent.Content.ReadAsStringAsync();
         
@@ -1385,7 +1450,7 @@ public class AuthZenClientTests
         
         AdjustBoxcarRequestSerialization(deserializedRequest);
 
-        var expectation = evaluationRequest.ToDto(defaults, boxcarOptions);
+        var expectation = evaluationRequest.Payload.ToDto();
         deserializedRequest.Should().BeEquivalentTo(expectation);
     }
 
@@ -1403,30 +1468,32 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenBoxcarRequest
+        var evaluationRequest = new AuthZenPayload<AuthZenBoxcarEvaluationRequest>()
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
-        };
-
-        var defaults = new AuthZenBoxcarEvaluation
-        {
-            Subject = new AuthZenSubject
+            Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Id = "jk;dfgn",
-                Type = "jk;dfbgn;"
-            },
-            Resource = new AuthZenResource
-            {
-                Type = "hjldfbg",
-                Id = "jkldfbgns"
-            },
-            Action = new AuthZenAction
-            {
-                Name = "hjkldfgb"
+                Evaluations = new List<AuthZenBoxcarEvaluation>(),
+                DefaultValues = new AuthZenBoxcarEvaluation
+                {
+                    Subject = new AuthZenSubject
+                    {
+                        Id = "jk;dfgn",
+                        Type = "jk;dfbgn;"
+                    },
+                    Resource = new AuthZenResource
+                    {
+                        Type = "hjldfbg",
+                        Id = "jkldfbgns"
+                    },
+                    Action = new AuthZenAction
+                    {
+                        Name = "hjkldfgb"
+                    }
+                }
             }
         };
         
-        await sut.Evaluate(evaluationRequest, defaults);
+        await sut.Evaluate(evaluationRequest);
         
         requestSent.Should().NotBeNull();
         requestSent.Method.Should().Be(HttpMethod.Post);

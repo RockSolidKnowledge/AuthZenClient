@@ -42,15 +42,15 @@ namespace Rsk.AuthZen.Client
             httpClient.BaseAddress = new Uri(options.Value.AuthorizationUrl);
         }
 
-        public async Task<AuthZenResponse> Evaluate(AuthZenEvaluationRequest evaluationRequest)
+        public async Task<AuthZenResponse> Evaluate(AuthZenPayload<AuthZenSingleEvaluationRequest> request)
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{UriBase}/{EvaluationUri}", UriKind.Relative));
-            if (evaluationRequest.CorrelationId != null)
+            if (request.CorrelationId != null)
             {
-                requestMessage.Headers.Add(RequestIdHeader, evaluationRequest.CorrelationId);
+                requestMessage.Headers.Add(RequestIdHeader, request.CorrelationId);
             }
 
-            string requestJson = JsonSerializer.Serialize(evaluationRequest.ToDto(), serializerOptions);
+            string requestJson = JsonSerializer.Serialize(request.Payload.ToDto(), serializerOptions);
 
             HttpContent content = new StringContent(requestJson, Encoding.UTF8, AuthZenContentType);
             requestMessage.Content = content;
@@ -79,16 +79,11 @@ namespace Rsk.AuthZen.Client
             return authZenResponse;
         }
 
-        public Task<AuthZenBoxcarResponse> Evaluate(AuthZenBoxcarRequest request, AuthZenBoxcarEvaluation defaults)
-        {
-            return Evaluate(request, defaults, null);
-        }
-
-        public async Task<AuthZenBoxcarResponse> Evaluate(AuthZenBoxcarRequest request, AuthZenBoxcarEvaluation defaults, AuthZenBoxcarOptions boxcarOptions)
+        public async Task<AuthZenBoxcarResponse> Evaluate(AuthZenPayload<AuthZenBoxcarEvaluationRequest> request)
         {
             if (IsMultiEvaluationsMissing(request))
             {
-                return await FallbackToSingleEvaluation(request, defaults);
+                return await FallbackToSingleEvaluation(request);
             }
             
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{UriBase}/{BoxcarUri}", UriKind.Relative));
@@ -98,7 +93,7 @@ namespace Rsk.AuthZen.Client
                 requestMessage.Headers.Add(RequestIdHeader, request.CorrelationId);
             }
             
-            string requestJson = JsonSerializer.Serialize(request.ToDto(defaults, boxcarOptions), serializerOptions);
+            string requestJson = JsonSerializer.Serialize(request.Payload.ToDto(), serializerOptions);
             
             HttpContent content = new StringContent(requestJson, Encoding.UTF8, AuthZenContentType);
             requestMessage.Content = content;
@@ -131,20 +126,23 @@ namespace Rsk.AuthZen.Client
             return response;
         }
 
-        private static bool IsMultiEvaluationsMissing(AuthZenBoxcarRequest request)
+        private static bool IsMultiEvaluationsMissing(AuthZenPayload<AuthZenBoxcarEvaluationRequest> evaluationRequest)
         {
-            return request.Evaluations == null || !request.Evaluations.Any();
+            return evaluationRequest.Payload.Evaluations == null || !evaluationRequest.Payload.Evaluations.Any();
         }
 
-        private async Task<AuthZenBoxcarResponse> FallbackToSingleEvaluation(AuthZenBoxcarRequest request, AuthZenBoxcarEvaluation defaults)
+        private async Task<AuthZenBoxcarResponse> FallbackToSingleEvaluation(AuthZenPayload<AuthZenBoxcarEvaluationRequest> evaluationRequest)
         {
-            var singleResponse = await Evaluate(new AuthZenEvaluationRequest()
+            var singleResponse = await Evaluate(new AuthZenPayload<AuthZenSingleEvaluationRequest>()
             {
-                Context = defaults.Context,
-                Subject = defaults.Subject,
-                Resource = defaults.Resource,
-                Action = defaults.Action,
-                CorrelationId = request.CorrelationId
+                CorrelationId = evaluationRequest.CorrelationId,
+                Payload = new AuthZenSingleEvaluationRequest
+                {
+                    Context = evaluationRequest.Payload.DefaultValues.Context,
+                    Subject = evaluationRequest.Payload.DefaultValues.Subject,
+                    Resource = evaluationRequest.Payload.DefaultValues.Resource,
+                    Action = evaluationRequest.Payload.DefaultValues.Action,
+                }
             });
 
             return new AuthZenBoxcarResponse

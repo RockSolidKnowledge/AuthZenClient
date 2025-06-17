@@ -53,9 +53,9 @@ namespace Rsk.AuthZen.Client
             return contextProperties;
         }
 
-        public AuthZenEvaluationRequest Build()
+        public AuthZenPayload<AuthZenSingleEvaluationRequest> Build()
         {
-            var request = new AuthZenEvaluationRequest();
+            var request = new AuthZenSingleEvaluationRequest();
 
             if (subjectId != null)
             {
@@ -103,12 +103,11 @@ namespace Rsk.AuthZen.Client
                 request.Context = contextProperties.Build();
             }
 
-            if (correlationId != null)
+            return new AuthZenPayload<AuthZenSingleEvaluationRequest>
             {
-                request.CorrelationId = correlationId;
-            }
-            
-            return request;
+                Payload = request,
+                CorrelationId = correlationId
+            };
         }
 
         public IAuthZenRequestBuilder SetCorrelationId(string id)

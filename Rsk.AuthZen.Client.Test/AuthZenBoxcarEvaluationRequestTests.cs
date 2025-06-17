@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Rsk.AuthZen.Client.Test;
 
-public class AuthZenBoxcarRequestTests
+public class AuthZenBoxcarEvaluationRequestTests
 {
     [Fact]
     public void ToDto_WhenDefaultSubjectIsSet_ShouldPopulateSubject()
@@ -20,12 +20,12 @@ public class AuthZenBoxcarRequestTests
         };
         
         
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
-            
+            DefaultValues = defaults
         };
 
-        var dto = request.ToDto(defaults);
+        var dto = request.ToDto();
 
         dto.Subject.Should().NotBeNull();
         dto.Subject.Id.Should().Be("subject-id");
@@ -47,12 +47,12 @@ public class AuthZenBoxcarRequestTests
             }
         };
         
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
-            
+            DefaultValues = defaults
         };
 
-        var dto = request.ToDto(defaults);
+        var dto = request.ToDto();
 
         dto.Resource.Should().NotBeNull();
         dto.Resource.Id.Should().Be("resource-id");
@@ -73,12 +73,12 @@ public class AuthZenBoxcarRequestTests
             }
         };
             
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
-            
+            DefaultValues = defaults
         };
 
-        var dto = request.ToDto(defaults);
+        var dto = request.ToDto();
 
         dto.Action.Should().NotBeNull();
         dto.Action.Name.Should().Be("action-name");
@@ -97,12 +97,12 @@ public class AuthZenBoxcarRequestTests
             }
         };
         
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
-            
+            DefaultValues = defaults
         };
 
-        var dto = request.ToDto(defaults);
+        var dto = request.ToDto();
 
         dto.Context.Should().NotBeNull();
         dto.Context.Keys.Should().Contain("contextKey");
@@ -112,7 +112,7 @@ public class AuthZenBoxcarRequestTests
     [Fact]
     public void ToDto_WhenEvaluationsIsMissing_ShouldNotPopulateEvaluations()
     {
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
             Evaluations = null
         };
@@ -125,7 +125,7 @@ public class AuthZenBoxcarRequestTests
     [Fact]
     public void ToDto_WhenEvaluationsIsEmpty_ShouldNotPopulateEvaluations()
     {
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
             Evaluations = new List<AuthZenBoxcarEvaluation>()
         };
@@ -138,7 +138,7 @@ public class AuthZenBoxcarRequestTests
     [Fact]
     public void ToDto_WhenEvaluationsIsSet_ShouldPopulateEachEvaluation()
     {
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
             Evaluations = new List<AuthZenBoxcarEvaluation>
             {
@@ -192,7 +192,7 @@ public class AuthZenBoxcarRequestTests
     [Fact]
     public void ToDto_WhenEvaluationSubjectIsSet_ShouldPopulateSubject()
     {
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
             Evaluations = new List<AuthZenBoxcarEvaluation>()
             {
@@ -220,7 +220,7 @@ public class AuthZenBoxcarRequestTests
     [Fact]
     public void ToDto_WhenEvaluationResourceIsSet_ShouldPopulateResource()
     {
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
             Evaluations = new List<AuthZenBoxcarEvaluation>()
             {
@@ -249,7 +249,7 @@ public class AuthZenBoxcarRequestTests
     [Fact]
     public void ToDto_WhenEvaluationActionIsSet_ShouldPopulateAction()
     {
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
             Evaluations = new List<AuthZenBoxcarEvaluation>()
             {
@@ -275,7 +275,7 @@ public class AuthZenBoxcarRequestTests
     [Fact]
     public void ToDto_WhenEvaluationContextIsSet_ShouldPopulateContext()
     {
-        var request = new AuthZenBoxcarRequest
+        var request = new AuthZenBoxcarEvaluationRequest
         {
             Evaluations = new List<AuthZenBoxcarEvaluation>()
             {
@@ -302,7 +302,12 @@ public class AuthZenBoxcarRequestTests
     [InlineData(BoxcarSemantics.ExecuteAll)]
     public void ToDto_OptionsAreProvided_ShouldIncludeOptionsInRequestDto(BoxcarSemantics semantics)
     {
-        var request = new AuthZenBoxcarRequest
+        var options = new AuthZenBoxcarOptions()
+        {
+            Semantics = semantics
+        };
+        
+        var request = new AuthZenBoxcarEvaluationRequest
         {
             Evaluations = new List<AuthZenBoxcarEvaluation>
             {
@@ -326,15 +331,11 @@ public class AuthZenBoxcarRequestTests
                     Resource = new AuthZenResource { Id = "eval-resource-id3", Type = "eval-resource-type3" },
                     Action = new AuthZenAction { Name = "eval-action-name3", }
                 },
-            }
+            },
+            Options = options
         };
 
-        var options = new AuthZenBoxcarOptions()
-        {
-            Semantics = semantics
-        };
-
-        var dto = request.ToDto(null, options);
+        var dto = request.ToDto();
         
         dto.Options.Should().NotBeNull();
         dto.Options.Should().BeEquivalentTo(options.ToDto());
