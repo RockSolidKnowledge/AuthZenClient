@@ -42,7 +42,7 @@ namespace Rsk.AuthZen.Client
             httpClient.BaseAddress = new Uri(options.Value.AuthorizationUrl);
         }
 
-        public async Task<AuthZenResponse> Evaluate(AuthZenPayload<AuthZenSingleEvaluationRequest> request)
+        public async Task<AuthZenResponse> Evaluate(AuthZenPayload<AuthZenEvaluationRequest> request)
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{UriBase}/{EvaluationUri}", UriKind.Relative));
             if (request.CorrelationId != null)
@@ -133,10 +133,10 @@ namespace Rsk.AuthZen.Client
 
         private async Task<AuthZenBoxcarResponse> FallbackToSingleEvaluation(AuthZenPayload<AuthZenBoxcarEvaluationRequest> evaluationRequest)
         {
-            var singleResponse = await Evaluate(new AuthZenPayload<AuthZenSingleEvaluationRequest>()
+            var singleResponse = await Evaluate(new AuthZenPayload<AuthZenEvaluationRequest>()
             {
                 CorrelationId = evaluationRequest.CorrelationId,
-                Payload = new AuthZenSingleEvaluationRequest
+                Payload = new AuthZenEvaluationRequest
                 {
                     Context = evaluationRequest.Payload.DefaultValues.Context,
                     Subject = evaluationRequest.Payload.DefaultValues.Subject,

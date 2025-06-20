@@ -8,9 +8,13 @@ namespace Rsk.AuthZen.Client
         IAuthZenPropertyBag SetResource(string id, string type);
         IAuthZenPropertyBag SetAction(string name);
         IAuthZenPropertyBag SetContext();
-        IAuthZenRequestBuilder SetCorrelationId(string correlationId);
+    }
+    
+    public interface IAuthZenSingleRequestBuilder : IAuthZenRequestBuilder
+    {
+        IAuthZenSingleRequestBuilder SetCorrelationId(string correlationId);
         
-        AuthZenPayload<AuthZenSingleEvaluationRequest> Build();
+        AuthZenPayload<AuthZenEvaluationRequest> Build();
     }
     
     public interface IAuthZenPropertyBag

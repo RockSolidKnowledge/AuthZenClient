@@ -60,7 +60,7 @@ public class AuthZenClientTests
         return new AuthZenClient(httpClientFactory?.Object, options?.Object);
     }
     
-    private async Task VerifyMissingRequestPartOmitsElement(AuthZenPayload<AuthZenSingleEvaluationRequest> singleEvaluationRequest, string expectedMissingElement)
+    private async Task VerifyMissingRequestPartOmitsElement(AuthZenPayload<AuthZenEvaluationRequest> singleEvaluationRequest, string expectedMissingElement)
     {
         HttpRequestMessage requestSent = null;
         httpMessageHandler.Protected()
@@ -182,9 +182,9 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
             {
                 Subject = new AuthZenSubject
                 {
@@ -216,9 +216,9 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest
+            Payload = new AuthZenEvaluationRequest
             {
                 Subject = new AuthZenSubject
                 {
@@ -249,9 +249,9 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
             {
                 Subject = new AuthZenSubject
                 {
@@ -305,9 +305,9 @@ public class AuthZenClientTests
     [Fact]
     public async Task Evaluate_WhenCalledWithSingleEvaluationAndNoSubject_ShouldNotSerializeSubject()
     {
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
             {
                 Resource = new AuthZenResource
                 {
@@ -342,9 +342,9 @@ public class AuthZenClientTests
     [Fact]
     public async Task Evaluate_WhenCalledWithSingleEvaluationAndNoResource_ShouldNotSerializeResource()
     {
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
             {
                 Subject = new AuthZenSubject
                 {
@@ -379,9 +379,9 @@ public class AuthZenClientTests
     [Fact]
     public async Task Evaluate_WhenCalledWithSingleEvaluationAndNoAction_ShouldNotSerializeAction()
     {
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
 
             {
                 Subject = new AuthZenSubject
@@ -417,9 +417,9 @@ public class AuthZenClientTests
     [Fact]
     public async Task Evaluate_WhenCalledWithSingleEvaluationAndNoContext_ShouldNotSerializeContext()
     {
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
             {
                 Subject = new AuthZenSubject
                 {
@@ -474,9 +474,9 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
             {
                 Subject = new AuthZenSubject
                 {
@@ -521,9 +521,9 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
             {
                 Subject = new AuthZenSubject
                 {
@@ -548,9 +548,9 @@ public class AuthZenClientTests
 
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
             {
                 Subject = new AuthZenSubject
                 {
@@ -585,9 +585,9 @@ public class AuthZenClientTests
         
         var sut = CreateSut();
 
-        var evaluationRequest = new AuthZenPayload<AuthZenSingleEvaluationRequest>
+        var evaluationRequest = new AuthZenPayload<AuthZenEvaluationRequest>
         {
-            Payload = new AuthZenSingleEvaluationRequest()
+            Payload = new AuthZenEvaluationRequest()
             {
                 Subject = new AuthZenSubject
                 {
@@ -620,7 +620,7 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>
+                Evaluations = new List<AuthZenEvaluationRequest>
                 {
                     new()
                     {
@@ -631,7 +631,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
             }
         };
         
@@ -663,7 +663,7 @@ public class AuthZenClientTests
             CorrelationId = Guid.NewGuid().ToString(),
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>
+                Evaluations = new List<AuthZenEvaluationRequest>
                 {
                     new()
                     {
@@ -674,7 +674,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
             },
         };
         
@@ -705,7 +705,7 @@ public class AuthZenClientTests
             CorrelationId = Guid.NewGuid().ToString(),
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
                     new()
                     {
@@ -716,7 +716,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
             }
         };
         
@@ -763,9 +763,9 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
-                    new AuthZenBoxcarEvaluation()
+                    new AuthZenEvaluationRequest()
                     {
                         Subject = new AuthZenSubject
                         {
@@ -834,9 +834,9 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
-                    new AuthZenBoxcarEvaluation()
+                    new AuthZenEvaluationRequest()
                     {
                         Subject = new AuthZenSubject
                         {
@@ -867,9 +867,9 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
-                    new AuthZenBoxcarEvaluation()
+                    new AuthZenEvaluationRequest()
                     {
                         Subject = new AuthZenSubject
                         {
@@ -916,9 +916,9 @@ public class AuthZenClientTests
             {
 
 
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
-                    new AuthZenBoxcarEvaluation()
+                    new AuthZenEvaluationRequest()
                     {
                         Subject = new AuthZenSubject
                         {
@@ -953,7 +953,7 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>
+                Evaluations = new List<AuthZenEvaluationRequest>
                 {
                     new()
                     {
@@ -964,7 +964,7 @@ public class AuthZenClientTests
                         }
                     }
                 }, 
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
                 {
                     Subject = new AuthZenSubject()
                     {
@@ -1013,7 +1013,7 @@ public class AuthZenClientTests
             {
 
 
-                Evaluations = new List<AuthZenBoxcarEvaluation>
+                Evaluations = new List<AuthZenEvaluationRequest>
                 {
                     new()
                     {
@@ -1024,7 +1024,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
                 {
                     Subject = new AuthZenSubject()
                     {
@@ -1071,7 +1071,7 @@ public class AuthZenClientTests
             CorrelationId = Guid.NewGuid().ToString(),
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
                     new()
                     {
@@ -1082,7 +1082,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
                 {
                     Subject = new AuthZenSubject()
                     {
@@ -1145,9 +1145,9 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
-                    new AuthZenBoxcarEvaluation()
+                    new AuthZenEvaluationRequest()
                     {
                         Subject = new AuthZenSubject
                         {
@@ -1156,7 +1156,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
                 {
                     Subject = new AuthZenSubject()
                     {
@@ -1233,9 +1233,9 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
-                    new AuthZenBoxcarEvaluation()
+                    new AuthZenEvaluationRequest()
                     {
                         Subject = new AuthZenSubject
                         {
@@ -1244,7 +1244,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
                 {
                     Subject = new AuthZenSubject()
                     {
@@ -1284,9 +1284,9 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
-                    new AuthZenBoxcarEvaluation()
+                    new AuthZenEvaluationRequest()
                     {
                         Subject = new AuthZenSubject
                         {
@@ -1295,7 +1295,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
                 {
                     Subject = new AuthZenSubject()
                     {
@@ -1348,9 +1348,9 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
-                    new AuthZenBoxcarEvaluation()
+                    new AuthZenEvaluationRequest()
                     {
                         Subject = new AuthZenSubject
                         {
@@ -1359,7 +1359,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
                 {
                     Subject = new AuthZenSubject()
                     {
@@ -1406,7 +1406,7 @@ public class AuthZenClientTests
             CorrelationId = Guid.NewGuid().ToString(),
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>()
+                Evaluations = new List<AuthZenEvaluationRequest>()
                 {
                     new()
                     {
@@ -1417,7 +1417,7 @@ public class AuthZenClientTests
                         }
                     }
                 },
-                DefaultValues = new AuthZenBoxcarEvaluation()
+                DefaultValues = new AuthZenEvaluationRequest()
                 {
                     Subject = new AuthZenSubject()
                     {
@@ -1472,8 +1472,8 @@ public class AuthZenClientTests
         {
             Payload = new AuthZenBoxcarEvaluationRequest()
             {
-                Evaluations = new List<AuthZenBoxcarEvaluation>(),
-                DefaultValues = new AuthZenBoxcarEvaluation
+                Evaluations = new List<AuthZenEvaluationRequest>(),
+                DefaultValues = new AuthZenEvaluationRequest
                 {
                     Subject = new AuthZenSubject
                     {

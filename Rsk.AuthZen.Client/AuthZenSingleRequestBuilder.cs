@@ -2,19 +2,29 @@ using System;
 
 namespace Rsk.AuthZen.Client
 {
-    internal class AuthZenRequestBuilder : IAuthZenRequestBuilder
+    public class AuthZenSingleRequestBuilder : IAuthZenSingleRequestBuilder
     {
+        private string correlationId;
+        
         private string subjectId;
         private string subjectType;
         private string resourceId;
         private string resourceType;
         private string actionName;
-        private string correlationId;
 
         private AuthZenPropertyBag subjectProperties;
         private AuthZenPropertyBag resourceProperties;
         private AuthZenPropertyBag actionProperties;
         private AuthZenPropertyBag contextProperties;
+        
+        public IAuthZenSingleRequestBuilder SetCorrelationId(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Correlation ID must be provided", nameof(id));
+            
+            correlationId = id;
+
+            return this;
+        }
         
         public IAuthZenPropertyBag SetSubject(string id, string type)
         {
@@ -53,9 +63,9 @@ namespace Rsk.AuthZen.Client
             return contextProperties;
         }
 
-        public AuthZenPayload<AuthZenSingleEvaluationRequest> Build()
+        public AuthZenPayload<AuthZenEvaluationRequest> Build()
         {
-            var request = new AuthZenSingleEvaluationRequest();
+            var request = new AuthZenEvaluationRequest();
 
             if (subjectId != null)
             {
@@ -103,20 +113,11 @@ namespace Rsk.AuthZen.Client
                 request.Context = contextProperties.Build();
             }
 
-            return new AuthZenPayload<AuthZenSingleEvaluationRequest>
+            return new AuthZenPayload<AuthZenEvaluationRequest>
             {
                 Payload = request,
                 CorrelationId = correlationId
             };
-        }
-
-        public IAuthZenRequestBuilder SetCorrelationId(string id)
-        {
-            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Correlation ID must be provided", nameof(id));
-            
-            correlationId = id;
-
-            return this;
         }
     }
 }

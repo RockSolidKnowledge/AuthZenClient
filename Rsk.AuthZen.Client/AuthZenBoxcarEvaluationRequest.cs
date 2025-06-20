@@ -6,8 +6,8 @@ namespace Rsk.AuthZen.Client
 {
     public class AuthZenBoxcarEvaluationRequest
     {
-        public List<AuthZenBoxcarEvaluation> Evaluations { get; internal set; }
-        public AuthZenBoxcarEvaluation DefaultValues { get; internal set; }
+        public List<AuthZenEvaluationRequest> Evaluations { get; internal set; }
+        public AuthZenEvaluationRequest DefaultValues { get; internal set; }
         public AuthZenBoxcarOptions Options { get; internal set; }
         
         internal AuthZenBoxcarRequestMessageDto ToDto()
@@ -100,52 +100,6 @@ namespace Rsk.AuthZen.Client
                 BoxcarSemantics.PermitOnFirstPermit => "permit_on_first_permit",
                 _ => throw new ArgumentException($"Semantics value {semantics} is not supported ")
             };
-        }
-    }
-
-    public class AuthZenBoxcarEvaluation
-    {
-        public AuthZenSubject Subject { get; internal set; }
-        public AuthZenResource Resource { get; internal set; }
-        public AuthZenAction Action { get; internal set; }
-        public Dictionary<string, object> Context { get; internal set; }
-
-        internal AuthZenRequestMessageDto ToDto()
-        {
-            var dto = new AuthZenRequestMessageDto();
-
-            if (Subject != null)
-            {
-                dto.Subject = new AuthZenSubjectDto
-                {
-                    Id = Subject.Id,
-                    Type = Subject.Type,
-                    Properties = Subject.Properties
-                };
-            }
-
-            if (Resource != null)
-            {
-                dto.Resource = new AuthZenResourceDto
-                {
-                    Id = Resource.Id,
-                    Type = Resource.Type,
-                    Properties = Resource.Properties
-                };
-            }
-
-            if (Action != null)
-            {
-                dto.Action = new AuthZenActionDto
-                {
-                    Name = Action.Name,
-                    Properties = Action.Properties
-                };
-            }
-
-            dto.Context = Context;
-
-            return dto;
         }
     }
 }

@@ -9,7 +9,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenDefaultSubjectIsSet_ShouldPopulateSubject()
     {
-        var defaults = new AuthZenBoxcarEvaluation()
+        var defaults = new AuthZenEvaluationRequest()
         {
             Subject = new AuthZenSubject
             {
@@ -37,7 +37,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenDefaultResourceIsSet_ShouldPopulateResource()
     {
-        var defaults = new AuthZenBoxcarEvaluation()
+        var defaults = new AuthZenEvaluationRequest()
         {
             Resource = new AuthZenResource
             {
@@ -64,7 +64,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenDefaultActionIsSet_ShouldPopulateAction()
     {
-        var defaults = new AuthZenBoxcarEvaluation()
+        var defaults = new AuthZenEvaluationRequest()
         {
             Action = new AuthZenAction
             {
@@ -89,7 +89,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenDefaultContextIsSet_ShouldPopulateContext()
     {
-        var defaults = new AuthZenBoxcarEvaluation()
+        var defaults = new AuthZenEvaluationRequest()
         {
             Context = new Dictionary<string, object>
             {
@@ -127,7 +127,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     {
         var request = new AuthZenBoxcarEvaluationRequest
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Evaluations = new List<AuthZenEvaluationRequest>()
         };
 
         var dto = request.ToDto();
@@ -140,7 +140,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     {
         var request = new AuthZenBoxcarEvaluationRequest
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>
+            Evaluations = new List<AuthZenEvaluationRequest>
             {
                 new ()
                 {
@@ -194,7 +194,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     {
         var request = new AuthZenBoxcarEvaluationRequest
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Evaluations = new List<AuthZenEvaluationRequest>()
             {
                 new ()
                 {
@@ -222,7 +222,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     {
         var request = new AuthZenBoxcarEvaluationRequest
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Evaluations = new List<AuthZenEvaluationRequest>()
             {
                 new ()
                 {
@@ -251,7 +251,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     {
         var request = new AuthZenBoxcarEvaluationRequest
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Evaluations = new List<AuthZenEvaluationRequest>()
             {
                 new ()
                 {
@@ -277,7 +277,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     {
         var request = new AuthZenBoxcarEvaluationRequest
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>()
+            Evaluations = new List<AuthZenEvaluationRequest>()
             {
                 new ()
                 {
@@ -309,7 +309,7 @@ public class AuthZenBoxcarEvaluationRequestTests
         
         var request = new AuthZenBoxcarEvaluationRequest
         {
-            Evaluations = new List<AuthZenBoxcarEvaluation>
+            Evaluations = new List<AuthZenEvaluationRequest>
             {
                 new ()
                 {

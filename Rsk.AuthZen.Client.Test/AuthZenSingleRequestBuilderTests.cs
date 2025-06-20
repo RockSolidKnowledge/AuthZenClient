@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Rsk.AuthZen.Client.Test;
 
-public class AuthZenRequestBuilderTests
+public class AuthZenSingleRequestBuilderTests
 {
     [Fact]
     public void SetSubject_WhenCalled_ShouldReturnAnIAuthZenPropertyBag()
@@ -318,7 +318,7 @@ public class AuthZenRequestBuilderTests
         string expectedCorrelationId = "ihjubvsdlfvchusdiufvbidusb";
         var sut = CreateSut();
 
-        IAuthZenRequestBuilder result = sut.SetCorrelationId(expectedCorrelationId);
+        IAuthZenSingleRequestBuilder result = sut.SetCorrelationId(expectedCorrelationId);
         
         result.Should().BeSameAs(sut);
     }
@@ -349,8 +349,8 @@ public class AuthZenRequestBuilderTests
         result.CorrelationId.Should().Be(expectedCorrelationId);
     }
 
-    private AuthZenRequestBuilder CreateSut()
+    private AuthZenSingleRequestBuilder CreateSut()
     {
-        return new AuthZenRequestBuilder();
+        return new AuthZenSingleRequestBuilder();
     }
 }
