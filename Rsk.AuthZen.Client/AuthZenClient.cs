@@ -11,11 +11,18 @@ using Rsk.AuthZen.Client.DTOs;
 
 namespace Rsk.AuthZen.Client
 {
+    /// <summary>
+    /// Provides configuration options for the <see cref="AuthZenClient"/>.
+    /// </summary>
     public class AuthZenClientOptions
     {
+        /// <summary>
+        /// Gets or sets the base URL of the AuthZen authorization service.
+        /// </summary>
         public string AuthorizationUrl { get; set; }
     }
     
+    /// <inheritdoc cref="IAuthZenClient"/>
     public class AuthZenClient : IAuthZenClient
     {
         private const string AuthZenContentType = "application/json";
@@ -32,6 +39,13 @@ namespace Rsk.AuthZen.Client
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         };
 
+        /// <summary>
+        /// Creates a new instance of <see cref="AuthZenClient"/>.
+        /// </summary>
+        /// <param name="httpClientFactory">The httpClientFactory</param>
+        /// <param name="options">The AuthZenClientOptions</param>
+        /// <exception cref="ArgumentNullException">Thrown if any argument is null</exception>
+        /// <exception cref="ArgumentException">Thrown if the AuthZenClientOptions are invalid</exception>
         public AuthZenClient(IHttpClientFactory httpClientFactory, IOptions<AuthZenClientOptions> options)
         {
             if (httpClientFactory == null) throw new ArgumentNullException(nameof(httpClientFactory));
@@ -42,6 +56,7 @@ namespace Rsk.AuthZen.Client
             httpClient.BaseAddress = new Uri(options.Value.AuthorizationUrl);
         }
 
+        /// <inheritdoc cref="IAuthZenClient"/>
         public async Task<AuthZenResponse> Evaluate(AuthZenEvaluationRequest request)
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{UriBase}/{EvaluationUri}", UriKind.Relative));
@@ -79,6 +94,7 @@ namespace Rsk.AuthZen.Client
             return authZenResponse;
         }
 
+        /// <inheritdoc cref="IAuthZenClient"/>
         public async Task<AuthZenBoxcarResponse> Evaluate(AuthZenBoxcarEvaluationRequest request)
         {
             if (IsMultiEvaluationsMissing(request))
