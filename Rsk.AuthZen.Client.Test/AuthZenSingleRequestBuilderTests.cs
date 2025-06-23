@@ -165,27 +165,27 @@ public class AuthZenSingleRequestBuilderTests
         
         result.Should().NotBeNull();
         
-        result.Payload.Subject.Id.Should().Be(subjectId);
-        result.Payload.Subject.Type.Should().Be(subjectType);
-        result.Payload.Subject.Properties.Should().HaveCount(2);
-        result.Payload.Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty1 && kv.Value.Equals(subjectProperty1Value));
-        result.Payload.Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty2 && kv.Value.Equals(subjectProperty2Value));
+        result.Body.Subject.Id.Should().Be(subjectId);
+        result.Body.Subject.Type.Should().Be(subjectType);
+        result.Body.Subject.Properties.Should().HaveCount(2);
+        result.Body.Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty1 && kv.Value.Equals(subjectProperty1Value));
+        result.Body.Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty2 && kv.Value.Equals(subjectProperty2Value));
 
-        result.Payload.Resource.Id.Should().Be(resourceId);
-        result.Payload.Resource.Type.Should().Be(resourceType);
-        result.Payload.Resource.Properties.Should().HaveCount(2);
-        result.Payload.Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty1 && kv.Value.Equals(resourceProperty1Value));
-        result.Payload.Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty2 && kv.Value.Equals(resourceProperty2Value));
+        result.Body.Resource.Id.Should().Be(resourceId);
+        result.Body.Resource.Type.Should().Be(resourceType);
+        result.Body.Resource.Properties.Should().HaveCount(2);
+        result.Body.Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty1 && kv.Value.Equals(resourceProperty1Value));
+        result.Body.Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty2 && kv.Value.Equals(resourceProperty2Value));
 
-        result.Payload.Action.Name.Should().Be(actionName);
-        result.Payload.Action.Properties.Should().HaveCount(2);
-        result.Payload.Action.Properties.Should().Contain(kv => kv.Key == actionProperty1 && kv.Value.Equals(actionProperty1Value));
-        result.Payload.Action.Properties.Should().Contain(kv => kv.Key == actionProperty2 && kv.Value.Equals(actionProperty2Value));
+        result.Body.Action.Name.Should().Be(actionName);
+        result.Body.Action.Properties.Should().HaveCount(2);
+        result.Body.Action.Properties.Should().Contain(kv => kv.Key == actionProperty1 && kv.Value.Equals(actionProperty1Value));
+        result.Body.Action.Properties.Should().Contain(kv => kv.Key == actionProperty2 && kv.Value.Equals(actionProperty2Value));
         
-        result.Payload.Context.Should().HaveCount(3);
-        result.Payload.Context.Should().Contain(kv => kv.Key == contextProperty1 && kv.Value.Equals(contextProperty1Value));
-        result.Payload.Context.Should().Contain(kv => kv.Key == contextProperty2 && kv.Value.Equals(contextProperty2Value));
-        result.Payload.Context.Should().Contain(kv => kv.Key == contextProperty3 && kv.Value.Equals(contextProperty3Value));
+        result.Body.Context.Should().HaveCount(3);
+        result.Body.Context.Should().Contain(kv => kv.Key == contextProperty1 && kv.Value.Equals(contextProperty1Value));
+        result.Body.Context.Should().Contain(kv => kv.Key == contextProperty2 && kv.Value.Equals(contextProperty2Value));
+        result.Body.Context.Should().Contain(kv => kv.Key == contextProperty3 && kv.Value.Equals(contextProperty3Value));
     }
     
     [Fact]
@@ -204,7 +204,7 @@ public class AuthZenSingleRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Subject.Should().BeNull();
+        result.Body.Subject.Should().BeNull();
     }
     
     [Fact]
@@ -223,7 +223,7 @@ public class AuthZenSingleRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Resource.Should().BeNull();
+        result.Body.Resource.Should().BeNull();
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public class AuthZenSingleRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Action.Should().BeNull();
+        result.Body.Action.Should().BeNull();
     }
     
     [Fact]
@@ -261,7 +261,7 @@ public class AuthZenSingleRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Context.Should().BeNull();
+        result.Body.Context.Should().BeNull();
     }
     
     [Fact]
@@ -273,7 +273,7 @@ public class AuthZenSingleRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Subject.Properties.Should().BeNull();
+        result.Body.Subject.Properties.Should().BeNull();
     }
     
     [Fact]
@@ -285,7 +285,7 @@ public class AuthZenSingleRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Resource.Properties.Should().BeNull();
+        result.Body.Resource.Properties.Should().BeNull();
     }
     
     [Fact]
@@ -297,7 +297,7 @@ public class AuthZenSingleRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Action.Properties.Should().BeNull();
+        result.Body.Action.Properties.Should().BeNull();
     }
     
     [Fact]
@@ -309,7 +309,7 @@ public class AuthZenSingleRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Context.Should().BeNull();
+        result.Body.Context.Should().BeNull();
     }
     
     [Fact]

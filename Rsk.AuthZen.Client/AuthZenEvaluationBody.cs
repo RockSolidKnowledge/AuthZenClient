@@ -3,7 +3,7 @@ using Rsk.AuthZen.Client.DTOs;
 
 namespace Rsk.AuthZen.Client
 {
-    public class AuthZenEvaluationRequest
+    public class AuthZenEvaluationBody
     {
         public AuthZenSubject Subject { get; internal set; }
         public AuthZenResource Resource { get; internal set; }

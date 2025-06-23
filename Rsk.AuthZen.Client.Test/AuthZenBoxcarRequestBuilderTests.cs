@@ -171,12 +171,12 @@ public class AuthZenBoxcarRequestBuilderTests
 
         request.Should().NotBeNull();
         request.CorrelationId.Should().Be("test-correlation-id");
-        request.Payload.DefaultValues.Subject.Id.Should().Be("subject-id");
-        request.Payload.DefaultValues.Subject.Type.Should().Be("subject-type");
-        request.Payload.DefaultValues.Resource.Id.Should().Be("resource-id");
-        request.Payload.DefaultValues.Resource.Type.Should().Be("resource-type");
-        request.Payload.DefaultValues.Action.Name.Should().Be("action-name");
-        request.Payload.DefaultValues.Context.Should().NotBeNull();
+        request.Body.DefaultValues.Subject.Id.Should().Be("subject-id");
+        request.Body.DefaultValues.Subject.Type.Should().Be("subject-type");
+        request.Body.DefaultValues.Resource.Id.Should().Be("resource-id");
+        request.Body.DefaultValues.Resource.Type.Should().Be("resource-type");
+        request.Body.DefaultValues.Action.Name.Should().Be("action-name");
+        request.Body.DefaultValues.Context.Should().NotBeNull();
     }
 
     [Fact]
@@ -194,11 +194,11 @@ public class AuthZenBoxcarRequestBuilderTests
 
         request.Should().NotBeNull();
         request.CorrelationId.Should().Be("test-correlation-id");
-        request.Payload.DefaultValues.Subject.Should().BeNull();
-        request.Payload.DefaultValues.Resource.Id.Should().Be("resource-id");
-        request.Payload.DefaultValues.Resource.Type.Should().Be("resource-type");
-        request.Payload.DefaultValues.Action.Name.Should().Be("action-name");
-        request.Payload.DefaultValues.Context.Should().NotBeNull();
+        request.Body.DefaultValues.Subject.Should().BeNull();
+        request.Body.DefaultValues.Resource.Id.Should().Be("resource-id");
+        request.Body.DefaultValues.Resource.Type.Should().Be("resource-type");
+        request.Body.DefaultValues.Action.Name.Should().Be("action-name");
+        request.Body.DefaultValues.Context.Should().NotBeNull();
     }
 
     [Fact]
@@ -216,11 +216,11 @@ public class AuthZenBoxcarRequestBuilderTests
 
         request.Should().NotBeNull();
         request.CorrelationId.Should().Be("test-correlation-id");
-        request.Payload.DefaultValues.Subject.Id.Should().Be("subject-id");
-        request.Payload.DefaultValues.Subject.Type.Should().Be("subject-type");
-        request.Payload.DefaultValues.Resource.Should().BeNull();
-        request.Payload.DefaultValues.Action.Name.Should().Be("action-name");
-        request.Payload.DefaultValues.Context.Should().NotBeNull();
+        request.Body.DefaultValues.Subject.Id.Should().Be("subject-id");
+        request.Body.DefaultValues.Subject.Type.Should().Be("subject-type");
+        request.Body.DefaultValues.Resource.Should().BeNull();
+        request.Body.DefaultValues.Action.Name.Should().Be("action-name");
+        request.Body.DefaultValues.Context.Should().NotBeNull();
     }
 
     [Fact]
@@ -238,12 +238,12 @@ public class AuthZenBoxcarRequestBuilderTests
 
         request.Should().NotBeNull();
         request.CorrelationId.Should().Be("test-correlation-id");
-        request.Payload.DefaultValues.Subject.Id.Should().Be("subject-id");
-        request.Payload.DefaultValues.Subject.Type.Should().Be("subject-type");
-        request.Payload.DefaultValues.Resource.Id.Should().Be("resource-id");
-        request.Payload.DefaultValues.Resource.Type.Should().Be("resource-type");
-        request.Payload.DefaultValues.Action.Should().BeNull();
-        request.Payload.DefaultValues.Context.Should().NotBeNull();
+        request.Body.DefaultValues.Subject.Id.Should().Be("subject-id");
+        request.Body.DefaultValues.Subject.Type.Should().Be("subject-type");
+        request.Body.DefaultValues.Resource.Id.Should().Be("resource-id");
+        request.Body.DefaultValues.Resource.Type.Should().Be("resource-type");
+        request.Body.DefaultValues.Action.Should().BeNull();
+        request.Body.DefaultValues.Context.Should().NotBeNull();
     }
 
     [Fact]
@@ -260,12 +260,12 @@ public class AuthZenBoxcarRequestBuilderTests
 
         request.Should().NotBeNull();
         request.CorrelationId.Should().Be("test-correlation-id");
-        request.Payload.DefaultValues.Subject.Id.Should().Be("subject-id");
-        request.Payload.DefaultValues.Subject.Type.Should().Be("subject-type");
-        request.Payload.DefaultValues.Resource.Id.Should().Be("resource-id");
-        request.Payload.DefaultValues.Resource.Type.Should().Be("resource-type");
-        request.Payload.DefaultValues.Action.Name.Should().Be("action-name");
-        request.Payload.DefaultValues.Context.Should().BeNull();
+        request.Body.DefaultValues.Subject.Id.Should().Be("subject-id");
+        request.Body.DefaultValues.Subject.Type.Should().Be("subject-type");
+        request.Body.DefaultValues.Resource.Id.Should().Be("resource-id");
+        request.Body.DefaultValues.Resource.Type.Should().Be("resource-type");
+        request.Body.DefaultValues.Action.Name.Should().Be("action-name");
+        request.Body.DefaultValues.Context.Should().BeNull();
     }
     [Fact]
     public void Build_WhenCalledWithEmptyDefaultContext_ShouldBuildCorrectRequest()
@@ -282,12 +282,12 @@ public class AuthZenBoxcarRequestBuilderTests
 
         request.Should().NotBeNull();
         request.CorrelationId.Should().Be("test-correlation-id");
-        request.Payload.DefaultValues.Subject.Id.Should().Be("subject-id");
-        request.Payload.DefaultValues.Subject.Type.Should().Be("subject-type");
-        request.Payload.DefaultValues.Resource.Id.Should().Be("resource-id");
-        request.Payload.DefaultValues.Resource.Type.Should().Be("resource-type");
-        request.Payload.DefaultValues.Action.Name.Should().Be("action-name");
-        request.Payload.DefaultValues.Context.Should().BeNull();
+        request.Body.DefaultValues.Subject.Id.Should().Be("subject-id");
+        request.Body.DefaultValues.Subject.Type.Should().Be("subject-type");
+        request.Body.DefaultValues.Resource.Id.Should().Be("resource-id");
+        request.Body.DefaultValues.Resource.Type.Should().Be("resource-type");
+        request.Body.DefaultValues.Action.Name.Should().Be("action-name");
+        request.Body.DefaultValues.Context.Should().BeNull();
     }
 
     [Fact]
@@ -462,27 +462,27 @@ public class AuthZenBoxcarRequestBuilderTests
         
         result.Should().NotBeNull();
         
-        result.Payload.Evaluations.Single().Subject.Id.Should().Be(subjectId);
-        result.Payload.Evaluations.Single().Subject.Type.Should().Be(subjectType);
-        result.Payload.Evaluations.Single().Subject.Properties.Should().HaveCount(2);
-        result.Payload.Evaluations.Single().Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty1 && kv.Value.Equals(subjectProperty1Value));
-        result.Payload.Evaluations.Single().Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty2 && kv.Value.Equals(subjectProperty2Value));
+        result.Body.Evaluations.Single().Subject.Id.Should().Be(subjectId);
+        result.Body.Evaluations.Single().Subject.Type.Should().Be(subjectType);
+        result.Body.Evaluations.Single().Subject.Properties.Should().HaveCount(2);
+        result.Body.Evaluations.Single().Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty1 && kv.Value.Equals(subjectProperty1Value));
+        result.Body.Evaluations.Single().Subject.Properties.Should().Contain(kv => kv.Key == subjectProperty2 && kv.Value.Equals(subjectProperty2Value));
 
-        result.Payload.Evaluations.Single().Resource.Id.Should().Be(resourceId);
-        result.Payload.Evaluations.Single().Resource.Type.Should().Be(resourceType);
-        result.Payload.Evaluations.Single().Resource.Properties.Should().HaveCount(2);
-        result.Payload.Evaluations.Single().Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty1 && kv.Value.Equals(resourceProperty1Value));
-        result.Payload.Evaluations.Single().Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty2 && kv.Value.Equals(resourceProperty2Value));
+        result.Body.Evaluations.Single().Resource.Id.Should().Be(resourceId);
+        result.Body.Evaluations.Single().Resource.Type.Should().Be(resourceType);
+        result.Body.Evaluations.Single().Resource.Properties.Should().HaveCount(2);
+        result.Body.Evaluations.Single().Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty1 && kv.Value.Equals(resourceProperty1Value));
+        result.Body.Evaluations.Single().Resource.Properties.Should().Contain(kv => kv.Key == resourceProperty2 && kv.Value.Equals(resourceProperty2Value));
 
-        result.Payload.Evaluations.Single().Action.Name.Should().Be(actionName);
-        result.Payload.Evaluations.Single().Action.Properties.Should().HaveCount(2);
-        result.Payload.Evaluations.Single().Action.Properties.Should().Contain(kv => kv.Key == actionProperty1 && kv.Value.Equals(actionProperty1Value));
-        result.Payload.Evaluations.Single().Action.Properties.Should().Contain(kv => kv.Key == actionProperty2 && kv.Value.Equals(actionProperty2Value));
+        result.Body.Evaluations.Single().Action.Name.Should().Be(actionName);
+        result.Body.Evaluations.Single().Action.Properties.Should().HaveCount(2);
+        result.Body.Evaluations.Single().Action.Properties.Should().Contain(kv => kv.Key == actionProperty1 && kv.Value.Equals(actionProperty1Value));
+        result.Body.Evaluations.Single().Action.Properties.Should().Contain(kv => kv.Key == actionProperty2 && kv.Value.Equals(actionProperty2Value));
         
-        result.Payload.Evaluations.Single().Context.Should().HaveCount(3);
-        result.Payload.Evaluations.Single().Context.Should().Contain(kv => kv.Key == contextProperty1 && kv.Value.Equals(contextProperty1Value));
-        result.Payload.Evaluations.Single().Context.Should().Contain(kv => kv.Key == contextProperty2 && kv.Value.Equals(contextProperty2Value));
-        result.Payload.Evaluations.Single().Context.Should().Contain(kv => kv.Key == contextProperty3 && kv.Value.Equals(contextProperty3Value));
+        result.Body.Evaluations.Single().Context.Should().HaveCount(3);
+        result.Body.Evaluations.Single().Context.Should().Contain(kv => kv.Key == contextProperty1 && kv.Value.Equals(contextProperty1Value));
+        result.Body.Evaluations.Single().Context.Should().Contain(kv => kv.Key == contextProperty2 && kv.Value.Equals(contextProperty2Value));
+        result.Body.Evaluations.Single().Context.Should().Contain(kv => kv.Key == contextProperty3 && kv.Value.Equals(contextProperty3Value));
     }
     
     [Fact]
@@ -503,7 +503,7 @@ public class AuthZenBoxcarRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Evaluations.Single().Subject.Should().BeNull();
+        result.Body.Evaluations.Single().Subject.Should().BeNull();
     }
     
     [Fact]
@@ -524,7 +524,7 @@ public class AuthZenBoxcarRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Evaluations.Single().Resource.Should().BeNull();
+        result.Body.Evaluations.Single().Resource.Should().BeNull();
     }
 
     [Fact]
@@ -545,7 +545,7 @@ public class AuthZenBoxcarRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Evaluations.Single().Action.Should().BeNull();
+        result.Body.Evaluations.Single().Action.Should().BeNull();
     }
     
     [Fact]
@@ -566,7 +566,7 @@ public class AuthZenBoxcarRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Evaluations.Single().Context.Should().BeNull();
+        result.Body.Evaluations.Single().Context.Should().BeNull();
     }
     
     [Fact]
@@ -578,7 +578,7 @@ public class AuthZenBoxcarRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Evaluations.Single().Subject.Properties.Should().BeNull();
+        result.Body.Evaluations.Single().Subject.Properties.Should().BeNull();
     }
     
     [Fact]
@@ -590,7 +590,7 @@ public class AuthZenBoxcarRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Evaluations.Single().Resource.Properties.Should().BeNull();
+        result.Body.Evaluations.Single().Resource.Properties.Should().BeNull();
     }
     
     [Fact]
@@ -602,7 +602,7 @@ public class AuthZenBoxcarRequestBuilderTests
 
         var result = sut.Build();
         
-        result.Payload.Evaluations.Single().Action.Properties.Should().BeNull();
+        result.Body.Evaluations.Single().Action.Properties.Should().BeNull();
     }
     
     [Fact]
@@ -614,7 +614,7 @@ public class AuthZenBoxcarRequestBuilderTests
 
         var result = sut.Build();
 
-        result.Payload.Evaluations.Should().BeEmpty();
+        result.Body.Evaluations.Should().BeEmpty();
     }
 
     [Theory]
@@ -650,13 +650,13 @@ public class AuthZenBoxcarRequestBuilderTests
 
         request.Should().NotBeNull();
         request.CorrelationId.Should().Be("test-correlation-id");
-        request.Payload.DefaultValues.Subject.Id.Should().Be("subject-id");
-        request.Payload.DefaultValues.Subject.Type.Should().Be("subject-type");
-        request.Payload.DefaultValues.Resource.Id.Should().Be("resource-id");
-        request.Payload.DefaultValues.Resource.Type.Should().Be("resource-type");
-        request.Payload.DefaultValues.Action.Name.Should().Be("action-name");
-        request.Payload.DefaultValues.Context.Should().NotBeNull();
-        request.Payload.Options.Semantics.Should().Be(semantics);
+        request.Body.DefaultValues.Subject.Id.Should().Be("subject-id");
+        request.Body.DefaultValues.Subject.Type.Should().Be("subject-type");
+        request.Body.DefaultValues.Resource.Id.Should().Be("resource-id");
+        request.Body.DefaultValues.Resource.Type.Should().Be("resource-type");
+        request.Body.DefaultValues.Action.Name.Should().Be("action-name");
+        request.Body.DefaultValues.Context.Should().NotBeNull();
+        request.Body.Options.Semantics.Should().Be(semantics);
     }
 
     [Fact]
@@ -673,6 +673,6 @@ public class AuthZenBoxcarRequestBuilderTests
 
         var request = sut.Build();
         
-        request.Payload.Options.Should().BeNull();
+        request.Body.Options.Should().BeNull();
     }
 }

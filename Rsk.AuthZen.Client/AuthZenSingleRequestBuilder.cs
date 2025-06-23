@@ -63,13 +63,13 @@ namespace Rsk.AuthZen.Client
             return contextProperties;
         }
 
-        public AuthZenPayload<AuthZenEvaluationRequest> Build()
+        public AuthZenEvaluationRequest Build()
         {
-            var request = new AuthZenEvaluationRequest();
+            var body = new AuthZenEvaluationBody();
 
             if (subjectId != null)
             {
-                request.Subject = new AuthZenSubject
+                body.Subject = new AuthZenSubject
                 {
                     Id = subjectId,
                     Type = subjectType,
@@ -77,13 +77,13 @@ namespace Rsk.AuthZen.Client
                 
                 if(!subjectProperties.IsEmpty)
                 {
-                    request.Subject.Properties = subjectProperties.Build();
+                    body.Subject.Properties = subjectProperties.Build();
                 }
             }
 
             if (resourceId != null)
             {
-                request.Resource = new AuthZenResource
+                body.Resource = new AuthZenResource
                 {
                     Id = resourceId,
                     Type = resourceType,
@@ -91,31 +91,31 @@ namespace Rsk.AuthZen.Client
 
                 if (!resourceProperties.IsEmpty)
                 {
-                    request.Resource.Properties = resourceProperties.Build();
+                    body.Resource.Properties = resourceProperties.Build();
                 }
             }
 
             if (actionName != null)
             {
-                request.Action = new AuthZenAction
+                body.Action = new AuthZenAction
                 {
                     Name = actionName,
                 };
                 
                 if(!actionProperties.IsEmpty)
                 {
-                    request.Action.Properties = actionProperties.Build();
+                    body.Action.Properties = actionProperties.Build();
                 }
             }
 
             if (contextProperties != null && !contextProperties.IsEmpty)
             {
-                request.Context = contextProperties.Build();
+                body.Context = contextProperties.Build();
             }
 
-            return new AuthZenPayload<AuthZenEvaluationRequest>
+            return new AuthZenEvaluationRequest
             {
-                Payload = request,
+                Body = body,
                 CorrelationId = correlationId
             };
         }

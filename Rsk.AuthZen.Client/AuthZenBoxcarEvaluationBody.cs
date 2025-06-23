@@ -4,10 +4,10 @@ using Rsk.AuthZen.Client.DTOs;
 
 namespace Rsk.AuthZen.Client
 {
-    public class AuthZenBoxcarEvaluationRequest
+    public class AuthZenBoxcarEvaluationBody
     {
-        public List<AuthZenEvaluationRequest> Evaluations { get; internal set; }
-        public AuthZenEvaluationRequest DefaultValues { get; internal set; }
+        public List<AuthZenEvaluationBody> Evaluations { get; internal set; }
+        public AuthZenEvaluationBody DefaultValues { get; internal set; }
         public AuthZenBoxcarOptions Options { get; internal set; }
         
         internal AuthZenBoxcarRequestMessageDto ToDto()

@@ -4,12 +4,12 @@ using Xunit;
 
 namespace Rsk.AuthZen.Client.Test;
 
-public class AuthZenBoxcarEvaluationRequestTests
+public class AuthZenBoxcarEvaluationBodyTests
 {
     [Fact]
     public void ToDto_WhenDefaultSubjectIsSet_ShouldPopulateSubject()
     {
-        var defaults = new AuthZenEvaluationRequest()
+        var defaults = new AuthZenEvaluationBody()
         {
             Subject = new AuthZenSubject
             {
@@ -20,7 +20,7 @@ public class AuthZenBoxcarEvaluationRequestTests
         };
         
         
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
             DefaultValues = defaults
         };
@@ -37,7 +37,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenDefaultResourceIsSet_ShouldPopulateResource()
     {
-        var defaults = new AuthZenEvaluationRequest()
+        var defaults = new AuthZenEvaluationBody()
         {
             Resource = new AuthZenResource
             {
@@ -47,7 +47,7 @@ public class AuthZenBoxcarEvaluationRequestTests
             }
         };
         
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
             DefaultValues = defaults
         };
@@ -64,7 +64,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenDefaultActionIsSet_ShouldPopulateAction()
     {
-        var defaults = new AuthZenEvaluationRequest()
+        var defaults = new AuthZenEvaluationBody()
         {
             Action = new AuthZenAction
             {
@@ -73,7 +73,7 @@ public class AuthZenBoxcarEvaluationRequestTests
             }
         };
             
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
             DefaultValues = defaults
         };
@@ -89,7 +89,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenDefaultContextIsSet_ShouldPopulateContext()
     {
-        var defaults = new AuthZenEvaluationRequest()
+        var defaults = new AuthZenEvaluationBody()
         {
             Context = new Dictionary<string, object>
             {
@@ -97,7 +97,7 @@ public class AuthZenBoxcarEvaluationRequestTests
             }
         };
         
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
             DefaultValues = defaults
         };
@@ -112,7 +112,7 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenEvaluationsIsMissing_ShouldNotPopulateEvaluations()
     {
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
             Evaluations = null
         };
@@ -125,9 +125,9 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenEvaluationsIsEmpty_ShouldNotPopulateEvaluations()
     {
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
-            Evaluations = new List<AuthZenEvaluationRequest>()
+            Evaluations = new List<AuthZenEvaluationBody>()
         };
 
         var dto = request.ToDto();
@@ -138,9 +138,9 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenEvaluationsIsSet_ShouldPopulateEachEvaluation()
     {
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
-            Evaluations = new List<AuthZenEvaluationRequest>
+            Evaluations = new List<AuthZenEvaluationBody>
             {
                 new ()
                 {
@@ -192,9 +192,9 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenEvaluationSubjectIsSet_ShouldPopulateSubject()
     {
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
-            Evaluations = new List<AuthZenEvaluationRequest>()
+            Evaluations = new List<AuthZenEvaluationBody>()
             {
                 new ()
                 {
@@ -220,9 +220,9 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenEvaluationResourceIsSet_ShouldPopulateResource()
     {
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
-            Evaluations = new List<AuthZenEvaluationRequest>()
+            Evaluations = new List<AuthZenEvaluationBody>()
             {
                 new ()
                 {
@@ -249,9 +249,9 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenEvaluationActionIsSet_ShouldPopulateAction()
     {
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
-            Evaluations = new List<AuthZenEvaluationRequest>()
+            Evaluations = new List<AuthZenEvaluationBody>()
             {
                 new ()
                 {
@@ -275,9 +275,9 @@ public class AuthZenBoxcarEvaluationRequestTests
     [Fact]
     public void ToDto_WhenEvaluationContextIsSet_ShouldPopulateContext()
     {
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
-            Evaluations = new List<AuthZenEvaluationRequest>()
+            Evaluations = new List<AuthZenEvaluationBody>()
             {
                 new ()
                 {
@@ -307,9 +307,9 @@ public class AuthZenBoxcarEvaluationRequestTests
             Semantics = semantics
         };
         
-        var request = new AuthZenBoxcarEvaluationRequest
+        var request = new AuthZenBoxcarEvaluationBody
         {
-            Evaluations = new List<AuthZenEvaluationRequest>
+            Evaluations = new List<AuthZenEvaluationBody>
             {
                 new ()
                 {

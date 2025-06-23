@@ -15,7 +15,13 @@ namespace Rsk.AuthZen.Client
 
         IAuthZenRequestBuilder AddRequest();
         
-        AuthZenPayload<AuthZenBoxcarEvaluationRequest> Build();
+        AuthZenBoxcarEvaluationRequest Build();
+    }
+
+    public class AuthZenBoxcarEvaluationRequest
+    {
+        public string CorrelationId { get; internal set; }
+        public AuthZenBoxcarEvaluationBody Body { get; internal set; }
     }
     
     public class AuthZenBoxcarRequestBuilder : IAuthZenBoxcarRequestBuilder
@@ -103,17 +109,17 @@ namespace Rsk.AuthZen.Client
             return this;
         }
 
-        public AuthZenPayload<AuthZenBoxcarEvaluationRequest> Build()
+        public AuthZenBoxcarEvaluationRequest Build()
         {
-            var payload = new AuthZenBoxcarEvaluationRequest
+            var body = new AuthZenBoxcarEvaluationBody
             {
-                Evaluations = new List<AuthZenEvaluationRequest>(),
-                DefaultValues = new AuthZenEvaluationRequest(),
+                Evaluations = new List<AuthZenEvaluationBody>(),
+                DefaultValues = new AuthZenEvaluationBody(),
             };
             
             if (!string.IsNullOrWhiteSpace(defaultSubjectId) && !string.IsNullOrWhiteSpace(defaultSubjectType))
             {
-                payload.DefaultValues.Subject = new AuthZenSubject
+                body.DefaultValues.Subject = new AuthZenSubject
                 {
                     Id = defaultSubjectId,
                     Type = defaultSubjectType,
@@ -121,13 +127,13 @@ namespace Rsk.AuthZen.Client
                 
                 if (defaultSubjectProperties is { IsEmpty: false })
                 {
-                    payload.DefaultValues.Subject.Properties = defaultSubjectProperties.Build();
+                    body.DefaultValues.Subject.Properties = defaultSubjectProperties.Build();
                 }
             }
             
             if (!string.IsNullOrWhiteSpace(defaultResourceId) && !string.IsNullOrWhiteSpace(defaultResourceType))
             {
-                payload.DefaultValues.Resource = new AuthZenResource
+                body.DefaultValues.Resource = new AuthZenResource
                 {
                     Id = defaultResourceId,
                     Type = defaultResourceType,
@@ -135,43 +141,43 @@ namespace Rsk.AuthZen.Client
                 
                 if (defaultResourceProperties is { IsEmpty: false })
                 {
-                    payload.DefaultValues.Resource.Properties = defaultResourceProperties.Build();
+                    body.DefaultValues.Resource.Properties = defaultResourceProperties.Build();
                 }
             }
             
             if (!string.IsNullOrWhiteSpace(defaultActionName))
             {
-                payload.DefaultValues.Action = new AuthZenAction
+                body.DefaultValues.Action = new AuthZenAction
                 {
                     Name = defaultActionName,
                 };
                 
                 if (defaultActionProperties is { IsEmpty: false })
                 {
-                    payload.DefaultValues.Action.Properties = defaultActionProperties.Build();
+                    body.DefaultValues.Action.Properties = defaultActionProperties.Build();
                 }
             }
             
             if (defaultContextProperties is { IsEmpty: false })
             {
-                payload.DefaultValues.Context = defaultContextProperties.Build();
+                body.DefaultValues.Context = defaultContextProperties.Build();
             }
             
             foreach (var builder in evaluationBuilders.Where(eb => eb.HasValuesSet))
             {
                 var evaluationRequest = builder.Build();
-                payload.Evaluations.Add(evaluationRequest);
+                body.Evaluations.Add(evaluationRequest);
             }
             
             if (options != null)
             {
-                payload.Options = options;
+                body.Options = options;
             }
 
-            return new AuthZenPayload<AuthZenBoxcarEvaluationRequest>
+            return new AuthZenBoxcarEvaluationRequest
             {
                 CorrelationId = correlationId,
-                Payload = payload
+                Body = body
             };
         }
     }
@@ -231,9 +237,9 @@ namespace Rsk.AuthZen.Client
             return contextProperties;
         }
 
-        public AuthZenEvaluationRequest Build()
+        public AuthZenEvaluationBody Build()
         {
-            var request = new AuthZenEvaluationRequest();
+            var request = new AuthZenEvaluationBody();
 
             if (subjectId != null)
             {

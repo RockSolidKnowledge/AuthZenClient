@@ -42,7 +42,7 @@ namespace Rsk.AuthZen.Client
             httpClient.BaseAddress = new Uri(options.Value.AuthorizationUrl);
         }
 
-        public async Task<AuthZenResponse> Evaluate(AuthZenPayload<AuthZenEvaluationRequest> request)
+        public async Task<AuthZenResponse> Evaluate(AuthZenEvaluationRequest request)
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{UriBase}/{EvaluationUri}", UriKind.Relative));
             if (request.CorrelationId != null)
@@ -50,7 +50,7 @@ namespace Rsk.AuthZen.Client
                 requestMessage.Headers.Add(RequestIdHeader, request.CorrelationId);
             }
 
-            string requestJson = JsonSerializer.Serialize(request.Payload.ToDto(), serializerOptions);
+            string requestJson = JsonSerializer.Serialize(request.Body.ToDto(), serializerOptions);
 
             HttpContent content = new StringContent(requestJson, Encoding.UTF8, AuthZenContentType);
             requestMessage.Content = content;
@@ -79,7 +79,7 @@ namespace Rsk.AuthZen.Client
             return authZenResponse;
         }
 
-        public async Task<AuthZenBoxcarResponse> Evaluate(AuthZenPayload<AuthZenBoxcarEvaluationRequest> request)
+        public async Task<AuthZenBoxcarResponse> Evaluate(AuthZenBoxcarEvaluationRequest request)
         {
             if (IsMultiEvaluationsMissing(request))
             {
@@ -93,7 +93,7 @@ namespace Rsk.AuthZen.Client
                 requestMessage.Headers.Add(RequestIdHeader, request.CorrelationId);
             }
             
-            string requestJson = JsonSerializer.Serialize(request.Payload.ToDto(), serializerOptions);
+            string requestJson = JsonSerializer.Serialize(request.Body.ToDto(), serializerOptions);
             
             HttpContent content = new StringContent(requestJson, Encoding.UTF8, AuthZenContentType);
             requestMessage.Content = content;
@@ -126,22 +126,22 @@ namespace Rsk.AuthZen.Client
             return response;
         }
 
-        private static bool IsMultiEvaluationsMissing(AuthZenPayload<AuthZenBoxcarEvaluationRequest> evaluationRequest)
+        private static bool IsMultiEvaluationsMissing(AuthZenBoxcarEvaluationRequest evaluationRequest)
         {
-            return evaluationRequest.Payload.Evaluations == null || !evaluationRequest.Payload.Evaluations.Any();
+            return evaluationRequest.Body.Evaluations == null || !evaluationRequest.Body.Evaluations.Any();
         }
 
-        private async Task<AuthZenBoxcarResponse> FallbackToSingleEvaluation(AuthZenPayload<AuthZenBoxcarEvaluationRequest> evaluationRequest)
+        private async Task<AuthZenBoxcarResponse> FallbackToSingleEvaluation(AuthZenBoxcarEvaluationRequest evaluationRequest)
         {
-            var singleResponse = await Evaluate(new AuthZenPayload<AuthZenEvaluationRequest>()
+            var singleResponse = await Evaluate(new AuthZenEvaluationRequest
             {
                 CorrelationId = evaluationRequest.CorrelationId,
-                Payload = new AuthZenEvaluationRequest
+                Body = new AuthZenEvaluationBody
                 {
-                    Context = evaluationRequest.Payload.DefaultValues.Context,
-                    Subject = evaluationRequest.Payload.DefaultValues.Subject,
-                    Resource = evaluationRequest.Payload.DefaultValues.Resource,
-                    Action = evaluationRequest.Payload.DefaultValues.Action,
+                    Context = evaluationRequest.Body.DefaultValues.Context,
+                    Subject = evaluationRequest.Body.DefaultValues.Subject,
+                    Resource = evaluationRequest.Body.DefaultValues.Resource,
+                    Action = evaluationRequest.Body.DefaultValues.Action,
                 }
             });
 
