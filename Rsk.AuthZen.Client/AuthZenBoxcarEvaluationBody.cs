@@ -138,7 +138,7 @@ namespace Rsk.AuthZen.Client
         {
             return new AuthZenBoxcarOptionsDto
             {
-                Evaluation_semantics = ConvertSemantics(Semantics)
+                Evaluations_semantic = ConvertSemantics(Semantics)
             };
         }
 

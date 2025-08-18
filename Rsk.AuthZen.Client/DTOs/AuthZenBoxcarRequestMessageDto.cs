@@ -8,6 +8,6 @@ namespace Rsk.AuthZen.Client.DTOs
     
     internal class AuthZenBoxcarOptionsDto
     {
-        public string Evaluation_semantics { get; set; }
+        public string Evaluations_semantic { get; set; }
     }
 }
