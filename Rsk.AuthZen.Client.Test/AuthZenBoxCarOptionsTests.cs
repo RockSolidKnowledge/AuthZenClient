@@ -22,6 +22,6 @@ public class AuthZenBoxCarOptionsTests
         
         AuthZenBoxcarOptionsDto dto = sut.ToDto();
         
-        dto.Evaluation_semantics.Should().Be(expectedDtoValue);
+        dto.Evaluations_semantic.Should().Be(expectedDtoValue);
     }
 }
