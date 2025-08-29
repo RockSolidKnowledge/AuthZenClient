@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuthZen Client Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #64748b;
+        }
+
+        .tab.active {
+            background: white;
+            color: #4f46e5;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        textarea {
+            min-height: 120px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        }
+
+        .response {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-left: 4px solid #4f46e5;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+            color: #059669;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .json-editor {
+            position: relative;
+        }
+
+        .json-error {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .batch-evaluation {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .remove-evaluation {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .add-evaluation {
+            background: #10b981;
+            margin-bottom: 1rem;
+        }
+
+        .config-status {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-connected {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .examples {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0f9ff;
+            border-radius: 8px;
+            border: 1px solid #0ea5e9;
+        }
+
+        .examples h4 {
+            color: #0c4a6e;
+            margin-bottom: 0.5rem;
+        }
+
+        .example-btn {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            margin: 0.25rem;
+        }
+
+        .example-btn:hover {
+            background: #0284c7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AuthZen Client Test Page</h1>
+            <p>Test your AuthZen client library against a real Policy Decision Point (PDP)</p>
+        </div>
+
+        <div class="content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('config')">Configuration</button>
+                <button class="tab" onclick="switchTab('single')">Single Evaluation</button>
+                <button class="tab" onclick="switchTab('batch')">Batch Evaluations</button>
+                <button class="tab" onclick="switchTab('discover')">Discovery</button>
+            </div>
+
+            <!-- Configuration Tab -->
+            <div id="config" class="tab-content active">
+                <h2>Client Configuration</h2>
+                <div class="form-group">
+                    <label for="pdpUrl">PDP URL *</label>
+                    <input type="url" id="pdpUrl" placeholder="https://your-pdp.example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="token">Authentication Token (Optional)</label>
+                    <input type="password" id="token" placeholder="Bearer token">
+                </div>
+                <div class="form-group">
+                    <label for="timeout">Timeout (ms)</label>
+                    <input type="number" id="timeout" value="10000" min="1000">
+                </div>
+                <div class="form-group">
+                    <label for="headers">Additional Headers (JSON)</label>
+                    <textarea id="headers" placeholder='{"X-Custom-Header": "value"}'>{}</textarea>
+                </div>
+                <button class="btn" onclick="saveConfiguration()">Save Configuration</button>
+                <span id="configStatus" class="config-status status-disconnected">Not Configured</span>
+                
+                <div class="examples">
+                    <h4>Example Configurations:</h4>
+                    <button class="example-btn" onclick="loadExample('opa')">Open Policy Agent</button>
+                    <button class="example-btn" onclick="loadExample('cedar')">Cedar Agent</button>
+                    <button class="example-btn" onclick="loadExample('local')">Local Development</button>
+                </div>
+            </div>
+
+            <!-- Single Evaluation Tab -->
+            <div id="single" class="tab-content">
+                <h2>Single Access Evaluation</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="subjectType">Subject Type</label>
+                        <input type="text" id="subjectType" placeholder="user" value="user">
+                    </div>
+                    <div class="form-group">
+                        <label for="subjectId">Subject ID</label>
+                        <input type="text" id="subjectId" placeholder="alice@example.com" value="alice@example.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="subjectProperties">Subject Properties (JSON)</label>
+                    <textarea id="subjectProperties" placeholder='{"role": "admin", "department": "engineering"}'>{}</textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="resourceType">Resource Type</label>
+                        <input type="text" id="resourceType" placeholder="document" value="document">
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceId">Resource ID</label>
+                        <input type="text" id="resourceId" placeholder="doc123" value="doc123">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="resourceProperties">Resource Properties (JSON)</label>
+                    <textarea id="resourceProperties" placeholder='{"owner": "bob@example.com", "classification": "public"}'>{}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="actionName">Action Name</label>
+                    <input type="text" id="actionName" placeholder="read" value="read">
+                </div>
+                <div class="form-group">
+                    <label for="actionProperties">Action Properties (JSON)</label>
+                    <textarea id="actionProperties" placeholder='{"method": "GET"}'>{}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="context">Context (JSON)</label>
+                    <textarea id="context" placeholder='{"ip_address": "192.168.1.1", "time": "2023-01-01T12:00:00Z"}'>{}</textarea>
+                </div>
+
+                <button class="btn" onclick="evaluateSingle()">
+                    <span id="singleLoading" class="loading" style="display: none;"></span>
+                    Evaluate Access
+                </button>
+
+                <div class="examples">
+                    <h4>Example Requests:</h4>
+                    <button class="example-btn" onclick="loadSingleExample('admin-read')">Admin Read Document</button>
+                    <button class="example-btn" onclick="loadSingleExample('user-write')">User Write Document</button>
+                    <button class="example-btn" onclick="loadSingleExample('guest-delete')">Guest Delete Resource</button>
+                </div>
+
+                <div id="singleResponse" class="response" style="display: none;"></div>
+            </div>
+
+            <!-- Batch Evaluations Tab -->
+            <div id="batch" class="tab-content">
+                <h2>Batch Access Evaluations</h2>
+                
+                <div class="form-group">
+                    <label for="evalSemantics">Evaluation Semantics</label>
+                    <select id="evalSemantics">
+                        <option value="none">No Options (Default Behavior)</option>
+                        <option value="execute_all">Execute All</option>
+                        <option value="deny_on_first_deny">Deny on First Deny</option>
+                        <option value="permit_on_first_permit">Permit on First Permit</option>
+                    </select>
+                </div>
+
+                <h3>Default Values</h3>
+                <div class="form-group">
+                    <h4>Default Subject</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="defaultSubjectType">Subject Type</label>
+                            <input type="text" id="defaultSubjectType" placeholder="user">
+                        </div>
+                        <div class="form-group">
+                            <label for="defaultSubjectId">Subject ID</label>
+                            <input type="text" id="defaultSubjectId" placeholder="default-user@example.com">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="defaultSubjectProperties">Subject Properties (JSON)</label>
+                        <textarea id="defaultSubjectProperties" placeholder='{"role": "user"}'>{}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <h4>Default Resource</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="defaultResourceType">Resource Type</label>
+                            <input type="text" id="defaultResourceType" placeholder="document">
+                        </div>
+                        <div class="form-group">
+                            <label for="defaultResourceId">Resource ID</label>
+                            <input type="text" id="defaultResourceId" placeholder="default-doc">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="defaultResourceProperties">Resource Properties (JSON)</label>
+                        <textarea id="defaultResourceProperties" placeholder='{"classification": "public"}'>{}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <h4>Default Action</h4>
+                    <div class="form-group">
+                        <label for="defaultActionName">Action Name</label>
+                        <input type="text" id="defaultActionName" placeholder="read">
+                    </div>
+                    <div class="form-group">
+                        <label for="defaultActionProperties">Action Properties (JSON)</label>
+                        <textarea id="defaultActionProperties" placeholder='{"method": "GET"}'>{}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <h4>Default Context</h4>
+                    <div class="form-group">
+                        <label for="defaultContext">Default Context (JSON)</label>
+                        <textarea id="defaultContext" placeholder='{"environment": "production"}'>{}</textarea>
+                    </div>
+                </div>
+
+                <h3>Evaluations</h3>
+                <div id="evaluations">
+                    <!-- Evaluations will be added here -->
+                </div>
+
+                <button class="btn add-evaluation" onclick="addEvaluation()">+ Add Evaluation</button>
+                <button class="btn" onclick="evaluateBatch()">
+                    <span id="batchLoading" class="loading" style="display: none;"></span>
+                    Evaluate Batch
+                </button>
+
+                <div class="examples">
+                    <h4>Example Batches:</h4>
+                    <button class="example-btn" onclick="loadBatchExample()">Complete Evaluations</button>
+                    <button class="example-btn" onclick="loadDefaultOnlyExample()">Default-Only Request</button>
+                    <button class="example-btn" onclick="loadPartialElementsExample()">Using Defaults for Missing Elements</button>
+                </div>
+
+                <div id="batchResponse" class="response" style="display: none;"></div>
+            </div>
+
+            <!-- Discovery Tab -->
+            <div id="discover" class="tab-content">
+                <h2>PDP Discovery</h2>
+                <p>Discover the configuration and capabilities of your Policy Decision Point.</p>
+                
+                <button class="btn" onclick="discoverPDP()">
+                    <span id="discoverLoading" class="loading" style="display: none;"></span>
+                    Discover PDP Configuration
+                </button>
+
+                <div id="discoverResponse" class="response" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./index.js"></script>
+    <script>
+        // Global variables
+        let authzenClient = null;
+        let evaluationCount = 0;
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Utility functions
+        function parseJSON(str) {
+            if (!str.trim()) return {};
+            try {
+                return JSON.parse(str);
+            } catch (e) {
+                throw new Error(`Invalid JSON: ${e.message}`);
+            }
+        }
+
+        function displayResponse(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = JSON.stringify(data, null, 2);
+            element.className = `response ${isError ? 'error' : 'success'}`;
+            element.style.display = 'block';
+        }
+
+        function showLoading(elementId, show) {
+            document.getElementById(elementId).style.display = show ? 'inline-block' : 'none';
+        }
+
+        // Configuration functions
+        function saveConfiguration() {
+            try {
+                const config = {
+                    pdpUrl: document.getElementById('pdpUrl').value,
+                    token: document.getElementById('token').value || undefined,
+                    timeout: parseInt(document.getElementById('timeout').value) || 10000,
+                    headers: parseJSON(document.getElementById('headers').value)
+                };
+
+                if (!config.pdpUrl) {
+                    throw new Error('PDP URL is required');
+                }
+
+                authzenClient = new window.AuthZenClient.AuthZenClient(config);
+
+                document.getElementById('configStatus').textContent = 'Configured';
+                document.getElementById('configStatus').className = 'config-status status-connected';
+                
+            } catch (error) {
+                alert(`Configuration error: ${error.message}`);
+            }
+        }
+
+        function loadExample(type) {
+            const examples = {
+                'opa': {
+                    pdpUrl: 'https://opa.example.com',
+                    token: '',
+                    timeout: 10000,
+                    headers: '{"Content-Type": "application/json"}'
+                },
+                'cedar': {
+                    pdpUrl: 'https://cedar-agent.example.com',
+                    token: '',
+                    timeout: 5000,
+                    headers: '{}'
+                },
+                'local': {
+                    pdpUrl: 'http://localhost:8080',
+                    token: '',
+                    timeout: 15000,
+                    headers: '{}'
+                }
+            };
+
+            const example = examples[type];
+            document.getElementById('pdpUrl').value = example.pdpUrl;
+            document.getElementById('token').value = example.token;
+            document.getElementById('timeout').value = example.timeout;
+            document.getElementById('headers').value = example.headers;
+        }
+
+        // Single evaluation functions
+        async function evaluateSingle() {
+            if (!authzenClient) {
+                alert('Please configure the client first');
+                return;
+            }
+
+            try {
+                showLoading('singleLoading', true);
+
+                const request = {
+                    subject: {
+                        type: document.getElementById('subjectType').value,
+                        id: document.getElementById('subjectId').value,
+                        properties: parseJSON(document.getElementById('subjectProperties').value)
+                    },
+                    resource: {
+                        type: document.getElementById('resourceType').value,
+                        id: document.getElementById('resourceId').value,
+                        properties: parseJSON(document.getElementById('resourceProperties').value)
+                    },
+                    action: {
+                        name: document.getElementById('actionName').value,
+                        properties: parseJSON(document.getElementById('actionProperties').value)
+                    },
+                    context: parseJSON(document.getElementById('context').value)
+                };
+
+                const response = await authzenClient.evaluate(request);
+                displayResponse('singleResponse', { request, response });
+
+            } catch (error) {
+                displayResponse('singleResponse', { error: error.message }, true);
+            } finally {
+                showLoading('singleLoading', false);
+            }
+        }
+
+        function loadSingleExample(type) {
+            const examples = {
+                'admin-read': {
+                    subjectType: 'user',
+                    subjectId: 'admin@company.com',
+                    subjectProperties: '{"role": "admin", "department": "IT"}',
+                    resourceType: 'document',
+                    resourceId: 'sensitive-doc-123',
+                    resourceProperties: '{"classification": "confidential", "owner": "hr@company.com"}',
+                    actionName: 'read',
+                    actionProperties: '{}',
+                    context: '{"ip_address": "10.0.0.1", "user_agent": "Mozilla/5.0"}'
+                },
+                'user-write': {
+                    subjectType: 'user',
+                    subjectId: 'john.doe@company.com',
+                    subjectProperties: '{"role": "employee", "department": "Marketing"}',
+                    resourceType: 'document',
+                    resourceId: 'marketing-doc-456',
+                    resourceProperties: '{"classification": "public", "owner": "john.doe@company.com"}',
+                    actionName: 'write',
+                    actionProperties: '{"operation": "update"}',
+                    context: '{"time": "2023-12-01T14:30:00Z"}'
+                },
+                'guest-delete': {
+                    subjectType: 'user',
+                    subjectId: 'guest@external.com',
+                    subjectProperties: '{"role": "guest"}',
+                    resourceType: 'file',
+                    resourceId: 'temp-file-789',
+                    resourceProperties: '{"classification": "temporary"}',
+                    actionName: 'delete',
+                    actionProperties: '{}',
+                    context: '{"session_id": "session123"}'
+                }
+            };
+
+            const example = examples[type];
+            Object.keys(example).forEach(key => {
+                document.getElementById(key).value = example[key];
+            });
+        }
+
+        // Batch evaluation functions
+        function addEvaluation() {
+            evaluationCount++;
+            const evaluationsDiv = document.getElementById('evaluations');
+            
+            const evalDiv = document.createElement('div');
+            evalDiv.className = 'batch-evaluation';
+            evalDiv.innerHTML = `
+                <button class="remove-evaluation" onclick="removeEvaluation(this)">×</button>
+                <h4>Evaluation ${evaluationCount}</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Subject Type</label>
+                        <input type="text" name="subjectType" placeholder="user" value="user">
+                    </div>
+                    <div class="form-group">
+                        <label>Subject ID</label>
+                        <input type="text" name="subjectId" placeholder="alice@example.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Subject Properties (JSON)</label>
+                    <textarea name="subjectProperties" placeholder='{"role": "user"}'>{}</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Resource Type</label>
+                        <input type="text" name="resourceType" placeholder="document">
+                    </div>
+                    <div class="form-group">
+                        <label>Resource ID</label>
+                        <input type="text" name="resourceId" placeholder="doc123">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Resource Properties (JSON)</label>
+                    <textarea name="resourceProperties" placeholder='{"owner": "alice"}'>{}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Action Name</label>
+                    <input type="text" name="actionName" placeholder="read" value="read">
+                </div>
+                <div class="form-group">
+                    <label>Action Properties (JSON)</label>
+                    <textarea name="actionProperties" placeholder='{}'>{}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Context (JSON)</label>
+                    <textarea name="context" placeholder='{}'>{}</textarea>
+                </div>
+            `;
+            
+            evaluationsDiv.appendChild(evalDiv);
+        }
+
+        function removeEvaluation(button) {
+            button.parentElement.remove();
+        }
+        
+        // Update the buildDefaultValues helper function:
+        function buildDefaultValues() {
+            const defaults = {};
+            
+            // Build default subject
+            const subjectType = document.getElementById('defaultSubjectType').value.trim();
+            const subjectId = document.getElementById('defaultSubjectId').value.trim();
+            const subjectProps = parseJSON(document.getElementById('defaultSubjectProperties').value);
+            
+            if (subjectType || subjectId || Object.keys(subjectProps).length > 0) {
+                defaults.subject = {};
+                if (subjectType) defaults.subject.type = subjectType;
+                if (subjectId) defaults.subject.id = subjectId;
+                if (Object.keys(subjectProps).length > 0) defaults.subject.properties = subjectProps;
+            }
+            
+            // Build default resource
+            const resourceType = document.getElementById('defaultResourceType').value.trim();
+            const resourceId = document.getElementById('defaultResourceId').value.trim();
+            const resourceProps = parseJSON(document.getElementById('defaultResourceProperties').value);
+            
+            if (resourceType || resourceId || Object.keys(resourceProps).length > 0) {
+                defaults.resource = {};
+                if (resourceType) defaults.resource.type = resourceType;
+                if (resourceId) defaults.resource.id = resourceId;
+                if (Object.keys(resourceProps).length > 0) defaults.resource.properties = resourceProps;
+            }
+            
+            // Build default action
+            const actionName = document.getElementById('defaultActionName').value.trim();
+            const actionProps = parseJSON(document.getElementById('defaultActionProperties').value);
+            
+            if (actionName || Object.keys(actionProps).length > 0) {
+                defaults.action = {};
+                if (actionName) defaults.action.name = actionName;
+                if (Object.keys(actionProps).length > 0) defaults.action.properties = actionProps;
+            }
+            
+            // Add default context
+            const defaultContext = parseJSON(document.getElementById('defaultContext').value);
+            if (Object.keys(defaultContext).length > 0) {
+                defaults.context = defaultContext;
+            }
+            
+            return defaults;
+        }
+        
+        // Update the evaluateBatch function:
+        async function evaluateBatch() {
+            if (!authzenClient) {
+                alert('Please configure the client first');
+                return;
+            }
+        
+            try {
+                showLoading('batchLoading', true);
+        
+                const evaluations = [];
+                const evalDivs = document.querySelectorAll('.batch-evaluation');
+                
+                evalDivs.forEach(evalDiv => {
+                    const evaluation = {};
+                    
+                    // Only add subject if at least one field is provided
+                    const subjectType = evalDiv.querySelector('[name="subjectType"]').value.trim();
+                    const subjectId = evalDiv.querySelector('[name="subjectId"]').value.trim();
+                    const subjectProps = parseJSON(evalDiv.querySelector('[name="subjectProperties"]').value);
+                    
+                    if (subjectType || subjectId || Object.keys(subjectProps).length > 0) {
+                        evaluation.subject = {};
+                        if (subjectType) evaluation.subject.type = subjectType;
+                        if (subjectId) evaluation.subject.id = subjectId;
+                        if (Object.keys(subjectProps).length > 0) evaluation.subject.properties = subjectProps;
+                    }
+                    
+                    // Only add resource if at least one field is provided
+                    const resourceType = evalDiv.querySelector('[name="resourceType"]').value.trim();
+                    const resourceId = evalDiv.querySelector('[name="resourceId"]').value.trim();
+                    const resourceProps = parseJSON(evalDiv.querySelector('[name="resourceProperties"]').value);
+                    
+                    if (resourceType || resourceId || Object.keys(resourceProps).length > 0) {
+                        evaluation.resource = {};
+                        if (resourceType) evaluation.resource.type = resourceType;
+                        if (resourceId) evaluation.resource.id = resourceId;
+                        if (Object.keys(resourceProps).length > 0) evaluation.resource.properties = resourceProps;
+                    }
+                    
+                    // Only add action if at least one field is provided
+                    const actionName = evalDiv.querySelector('[name="actionName"]').value.trim();
+                    const actionProps = parseJSON(evalDiv.querySelector('[name="actionProperties"]').value);
+                    
+                    if (actionName || Object.keys(actionProps).length > 0) {
+                        evaluation.action = {};
+                        if (actionName) evaluation.action.name = actionName;
+                        if (Object.keys(actionProps).length > 0) evaluation.action.properties = actionProps;
+                    }
+                    
+                    // Only add context if provided
+                    const context = parseJSON(evalDiv.querySelector('[name="context"]').value);
+                    if (Object.keys(context).length > 0) {
+                        evaluation.context = context;
+                    }
+                    
+                    evaluations.push(evaluation);
+                });
+        
+                // Build request structure
+                const request = {};
+                
+                // Only include evaluations array if there are evaluations
+                if (evaluations.length > 0) {
+                    request.evaluations = evaluations;
+                }
+                
+                // Add default values using the new helper function
+                const defaults = buildDefaultValues();
+                Object.assign(request, defaults);
+        
+                // Handle evaluation semantics
+                const evalSemantics = document.getElementById('evalSemantics').value;
+                if (evalSemantics && evalSemantics !== 'none') {
+                    request.options = {
+                        evaluations_semantic: evalSemantics
+                    };
+                }
+        
+                const response = await authzenClient.evaluations(request);
+                displayResponse('batchResponse', { request, response });
+        
+            } catch (error) {
+                displayResponse('batchResponse', { error: error.message }, true);
+            } finally {
+                showLoading('batchLoading', false);
+            }
+        }
+        
+        // Update the loadDefaultOnlyExample function:
+        function loadDefaultOnlyExample() {
+            // Clear existing evaluations
+            document.getElementById('evaluations').innerHTML = '';
+            evaluationCount = 0;
+        
+            // Set complete default values for a default-only request
+            document.getElementById('defaultSubjectType').value = 'user';
+            document.getElementById('defaultSubjectId').value = 'admin@example.com';
+            document.getElementById('defaultSubjectProperties').value = '{"role": "admin"}';
+            
+            document.getElementById('defaultResourceType').value = 'document';
+            document.getElementById('defaultResourceId').value = 'sensitive-doc-123';
+            document.getElementById('defaultResourceProperties').value = '{"classification": "confidential"}';
+            
+            document.getElementById('defaultActionName').value = 'read';
+            document.getElementById('defaultActionProperties').value = '{"method": "GET"}';
+            
+            document.getElementById('defaultContext').value = '{"environment": "production", "ip_address": "10.0.0.1", "time": "2023-12-01T10:00:00Z"}';
+            document.getElementById('evalSemantics').value = 'execute_all';
+        }
+        
+        // Update the loadPartialElementsExample function:
+        function loadPartialElementsExample() {
+            // Clear existing evaluations
+            document.getElementById('evaluations').innerHTML = '';
+            evaluationCount = 0;
+        
+            // Set defaults that will be used when elements are missing from evaluations
+            document.getElementById('defaultSubjectType').value = 'user';
+            document.getElementById('defaultSubjectId').value = 'default-user@example.com';
+            document.getElementById('defaultSubjectProperties').value = '{}';
+            
+            document.getElementById('defaultResourceType').value = 'document';
+            document.getElementById('defaultResourceId').value = '';
+            document.getElementById('defaultResourceProperties').value = '{}';
+            
+            document.getElementById('defaultActionName').value = 'read';
+            document.getElementById('defaultActionProperties').value = '{}';
+            
+            document.getElementById('defaultContext').value = '{"environment": "test"}';
+        
+            // Add evaluation 1 - missing subject (will use default)
+            addEvaluation();
+            const eval1 = document.querySelector('.batch-evaluation:last-child');
+            clearEvaluation(eval1);
+            eval1.querySelector('[name="resourceType"]').value = 'document';
+            eval1.querySelector('[name="resourceId"]').value = 'doc1';
+            eval1.querySelector('[name="actionName"]').value = 'write';
+        
+            // Add evaluation 2 - missing resource (will use default)
+            addEvaluation();
+            const eval2 = document.querySelector('.batch-evaluation:last-child');
+            clearEvaluation(eval2);
+            eval2.querySelector('[name="subjectType"]').value = 'user';
+            eval2.querySelector('[name="subjectId"]').value = 'alice@example.com';
+            eval2.querySelector('[name="actionName"]').value = 'delete';
+        
+            // Add evaluation 3 - missing action (will use default)
+            addEvaluation();
+            const eval3 = document.querySelector('.batch-evaluation:last-child');
+            clearEvaluation(eval3);
+            eval3.querySelector('[name="subjectType"]').value = 'user';
+            eval3.querySelector('[name="subjectId"]').value = 'bob@example.com';
+            eval3.querySelector('[name="resourceType"]').value = 'document';
+            eval3.querySelector('[name="resourceId"]').value = 'doc3';
+        }
+        
+        // Update the loadBatchExample function:
+        function loadBatchExample() {
+            // Clear existing evaluations
+            document.getElementById('evaluations').innerHTML = '';
+            evaluationCount = 0;
+        
+            // Clear defaults (these will be empty for complete evaluations)
+            document.getElementById('defaultSubjectType').value = '';
+            document.getElementById('defaultSubjectId').value = '';
+            document.getElementById('defaultSubjectProperties').value = '{}';
+            
+            document.getElementById('defaultResourceType').value = '';
+            document.getElementById('defaultResourceId').value = '';
+            document.getElementById('defaultResourceProperties').value = '{}';
+            
+            document.getElementById('defaultActionName').value = '';
+            document.getElementById('defaultActionProperties').value = '{}';
+            
+            document.getElementById('defaultContext').value = '{"environment": "production", "time": "2023-12-01T10:00:00Z"}';
+        
+            // Add sample evaluations with complete elements
+            addEvaluation();
+            const eval1 = document.querySelector('.batch-evaluation:last-child');
+            eval1.querySelector('[name="subjectType"]').value = 'user';
+            eval1.querySelector('[name="subjectId"]').value = 'alice@example.com';
+            eval1.querySelector('[name="resourceType"]').value = 'document';
+            eval1.querySelector('[name="resourceId"]').value = 'doc1';
+            eval1.querySelector('[name="actionName"]').value = 'read';
+            eval1.querySelector('[name="subjectProperties"]').value = '{"role": "admin"}';
+        
+            addEvaluation();
+            const eval2 = document.querySelector('.batch-evaluation:last-child');
+            eval2.querySelector('[name="subjectType"]').value = 'user';
+            eval2.querySelector('[name="subjectId"]').value = 'bob@example.com';
+            eval2.querySelector('[name="resourceType"]').value = 'document';
+            eval2.querySelector('[name="resourceId"]').value = 'doc2';
+            eval2.querySelector('[name="actionName"]').value = 'write';
+            eval2.querySelector('[name="subjectProperties"]').value = '{"role": "user"}';
+        }
+        // Add function to clear evaluation fields
+        function clearEvaluation(evalDiv) {
+            evalDiv.querySelector('[name="subjectType"]').value = '';
+            evalDiv.querySelector('[name="subjectId"]').value = '';
+            evalDiv.querySelector('[name="subjectProperties"]').value = '{}';
+            evalDiv.querySelector('[name="resourceType"]').value = '';
+            evalDiv.querySelector('[name="resourceId"]').value = '';
+            evalDiv.querySelector('[name="resourceProperties"]').value = '{}';
+            evalDiv.querySelector('[name="actionName"]').value = '';
+            evalDiv.querySelector('[name="actionProperties"]').value = '{}';
+            evalDiv.querySelector('[name="context"]').value = '{}';
+        }
+
+        // Discovery functions
+        async function discoverPDP() {
+            if (!authzenClient) {
+                alert('Please configure the client first');
+                return;
+            }
+
+            try {
+                showLoading('discoverLoading', true);
+                const config = await authzenClient.discover();
+                displayResponse('discoverResponse', config);
+            } catch (error) {
+                displayResponse('discoverResponse', { error: error.message }, true);
+            } finally {
+                showLoading('discoverLoading', false);
+            }
+        }
+
+        // Initialize page
+        window.onload = function() {
+            // Add initial batch evaluation
+            addEvaluation();
+        };
+    </script>
+</body>
+</html>
