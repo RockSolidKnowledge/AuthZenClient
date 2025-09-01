@@ -9,6 +9,14 @@ namespace Rsk.AuthZen.Client
     public interface IAuthZenClient
     {
         /// <summary>
+        /// Gets the metadata information of the various endpoints from the AuthZen service.
+        /// </summary>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains the metadata response.
+        /// </returns>
+        Task<AuthZenMetadataResponse> GetMetadata();
+        
+        /// <summary>
         /// Evaluates a single authorization request.
         /// </summary>
         /// <param name="request">The authorization evaluation request.</param>

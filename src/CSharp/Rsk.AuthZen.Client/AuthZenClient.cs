@@ -29,9 +29,11 @@ namespace Rsk.AuthZen.Client
         internal const string UriBase = "access/v1";
         internal const string EvaluationUri = "evaluation";
         internal const string BoxcarUri = "evaluations";
+        internal const string MetadataEndpointUri = ".well-known/authzen-configuration";
         private const string RequestIdHeader = "X-Request-ID";
         
         private readonly HttpClient httpClient;
+        private AuthZenMetadataResponse _metadata;
 
         private static JsonSerializerOptions serializerOptions = new JsonSerializerOptions
         {
@@ -57,9 +59,38 @@ namespace Rsk.AuthZen.Client
         }
 
         /// <inheritdoc cref="IAuthZenClient"/>
+        public async Task<AuthZenMetadataResponse> GetMetadata()
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{MetadataEndpointUri}");
+
+            HttpResponseMessage response = await httpClient.SendAsync(requestMessage).ConfigureAwait(false);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new AuthZenRequestFailureException($"Metadata request failed with status code: {response.StatusCode}");
+            }
+
+            var responseContent  = await response.Content.ReadAsStringAsync();
+            
+            return JsonSerializer.Deserialize<AuthZenMetadataResponse>(responseContent, new JsonSerializerOptions(){ PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower});
+        }
+
+        /// <inheritdoc cref="IAuthZenClient"/>
         public async Task<AuthZenResponse> Evaluate(AuthZenEvaluationRequest request)
         {
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{UriBase}/{EvaluationUri}", UriKind.Relative));
+            bool canRetry404 = true;
+            if (_metadata == null)
+            {
+                _metadata = await GetMetadata();
+                canRetry404 = false;
+            }
+
+            return await EvaluateInternal(request, canRetry404);
+        }
+
+        private async Task<AuthZenResponse> EvaluateInternal(AuthZenEvaluationRequest request, bool canRetry)
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri(_metadata.AccessEvaluationEndpoint, UriKind.Absolute));
             if (request.CorrelationId != null)
             {
                 requestMessage.Headers.Add(RequestIdHeader, request.CorrelationId);
@@ -72,6 +103,12 @@ namespace Rsk.AuthZen.Client
             
             HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
 
+            if (canRetry && responseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _metadata = null;
+                return await Evaluate(request);
+            }
+            
             if (!responseMessage.IsSuccessStatusCode)
             {
                 throw new AuthZenRequestFailureException($"Evaluation request failed with status code: {responseMessage.StatusCode}");
@@ -97,12 +134,29 @@ namespace Rsk.AuthZen.Client
         /// <inheritdoc cref="IAuthZenClient"/>
         public async Task<AuthZenBoxcarResponse> Evaluate(AuthZenBoxcarEvaluationRequest request)
         {
+            bool canRetry404 = true;
+            if (_metadata == null)
+            {
+                _metadata = await GetMetadata();
+                canRetry404 = false;
+            }
+
+            return await BoxcarEvaluateInternal(request, canRetry404);
+        }
+
+        private async Task<AuthZenBoxcarResponse> BoxcarEvaluateInternal(AuthZenBoxcarEvaluationRequest request, bool canRetry)
+        {
             if (IsMultiEvaluationsMissing(request))
             {
                 return await FallbackToSingleEvaluation(request);
             }
             
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri($"{UriBase}/{BoxcarUri}", UriKind.Relative));
+            if (string.IsNullOrWhiteSpace(_metadata.AccessEvaluationsEndpoint))
+            {
+                throw new NotSupportedException("The AuthZen server does not support boxcar evaluation requests.");
+            }
+            
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, new Uri(_metadata.AccessEvaluationsEndpoint, UriKind.Absolute));
             
             if (request.CorrelationId != null)
             {
@@ -115,6 +169,12 @@ namespace Rsk.AuthZen.Client
             requestMessage.Content = content;
             
             HttpResponseMessage responseMessage = await httpClient.SendAsync(requestMessage);
+            
+            if (canRetry && responseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _metadata = null;
+                return await Evaluate(request);
+            }
             
             if (!responseMessage.IsSuccessStatusCode)
             {
