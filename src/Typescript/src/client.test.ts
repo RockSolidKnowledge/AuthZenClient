@@ -24,6 +24,23 @@ describe('AuthZenClient', () => {
     jest.useRealTimers();
   });
 
+  // Helper to mock discovery before each test that expects an API call
+  const setupDiscovery = (overrides = {}) => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({
+        policy_decision_point: 'https://example.com',
+        access_evaluation_endpoint: 'https://example.com/access/v1/evaluation',
+        access_evaluations_endpoint: 'https://example.com/access/v1/evaluations',
+        ...overrides,
+      }),
+      headers: {
+        get: jest.fn().mockReturnValue('application/json')
+      },
+    });
+  };
+
   describe('constructor', () => {
     it('should create a client with required config', () => {
       const client = new AuthZenClient({
@@ -390,6 +407,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should make correct API call for access evaluation', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -407,7 +425,13 @@ describe('AuthZenClient', () => {
 
       const response = await client.evaluate(validRequest);
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.anything()
+      );
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
         'https://example.com/access/v1/evaluation',
         expect.objectContaining({
           method: 'POST',
@@ -426,6 +450,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should handle HTTP errors', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: false,
         status: 403,
@@ -445,6 +470,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should handle network errors', async () => {
+      setupDiscovery();
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       const client = new AuthZenClient({
@@ -455,6 +481,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should handle timeout errors', async () => {
+      setupDiscovery();
       // Create a promise that will be rejected with AbortError when signal is aborted
       mockFetch.mockImplementation((url, options) => {
         return new Promise((resolve, reject) => {
@@ -491,6 +518,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should handle invalid JSON responses', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -509,6 +537,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should handle non-JSON responses', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -527,6 +556,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate request before sending', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -834,6 +864,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should make correct API call for batch evaluation', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -852,7 +883,13 @@ describe('AuthZenClient', () => {
 
       const response = await client.evaluations(validRequest);
 
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.anything()
+      );
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
         'https://example.com/access/v1/evaluations',
         expect.objectContaining({
           method: 'POST',
@@ -872,6 +909,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate evaluations_semantic in options', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -889,6 +927,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should accept valid evaluations_semantic values', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -923,6 +962,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should allow request without options', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -949,6 +989,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should allow empty options object', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -975,6 +1016,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate that options is an object if provided', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1003,6 +1045,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate individual evaluations in batch', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1027,6 +1070,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate default values structure', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -1064,6 +1108,7 @@ describe('AuthZenClient', () => {
 
   describe('default value handling', () => {
     it('should allow missing subject in evaluations when default subject is provided', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -1101,6 +1146,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should allow missing resource in evaluations when default resource is provided', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -1138,6 +1184,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should allow missing action in evaluations when default action is provided', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -1175,6 +1222,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should allow completely empty evaluations when all defaults are provided', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -1208,6 +1256,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should still require subject when no default subject is provided', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1231,6 +1280,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should still require resource when no default resource is provided', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1254,6 +1304,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should still require action when no default action is provided', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1279,6 +1330,7 @@ describe('AuthZenClient', () => {
 
   describe('partial element validation', () => {
     it('should reject partial subject (missing type) in evaluations', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1299,6 +1351,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should reject partial subject (missing id) in evaluations', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1339,6 +1392,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should reject partial resource (missing id) in evaluations', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1359,6 +1413,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should reject partial action (missing name) in evaluations', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1379,6 +1434,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should reject partial subject in defaults when used without evaluations', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1417,6 +1473,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should reject partial action in defaults when used without evaluations', async () => {
+      setupDiscovery();
       const client = new AuthZenClient({
         pdpUrl: 'https://example.com',
       });
@@ -1436,6 +1493,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should allow complete elements with properties', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
@@ -1488,6 +1546,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate subject type is required', async () => {
+      setupDiscovery();
       const invalidRequest = {
         subject: { id: 'alice@example.com' }, // Missing type
         action: { name: 'can_read' },
@@ -1498,6 +1557,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate subject id is required', async () => {
+      setupDiscovery();
       const invalidRequest = {
         subject: { type: 'user' }, // Missing id
         action: { name: 'can_read' },
@@ -1508,6 +1568,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate resource type is required', async () => {
+      setupDiscovery();
       const invalidRequest = {
         subject: { type: 'user', id: 'alice@example.com' },
         action: { name: 'can_read' },
@@ -1518,6 +1579,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate resource id is required', async () => {
+      setupDiscovery();
       const invalidRequest = {
         subject: { type: 'user', id: 'alice@example.com' },
         action: { name: 'can_read' },
@@ -1528,6 +1590,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should validate action name is required', async () => {
+      setupDiscovery();
       const invalidRequest = {
         subject: { type: 'user', id: 'alice@example.com' },
         action: {}, // Missing name
@@ -1548,6 +1611,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should wrap unknown errors as AuthZenError', async () => {
+      setupDiscovery();
       mockFetch.mockRejectedValue(new Error('Unknown error'));
 
       const validRequest: AccessEvaluationRequest = {
@@ -1560,6 +1624,7 @@ describe('AuthZenClient', () => {
     });
 
     it('should preserve AuthZen errors', async () => {
+      setupDiscovery();
       const customError = new AuthZenValidationError('Custom validation error');
       
       // Mock the validation to throw our custom error
@@ -1579,6 +1644,7 @@ describe('AuthZenClient', () => {
 
   describe('request ID generation', () => {
     it('should generate unique request IDs', async () => {
+      setupDiscovery();
       const mockResponse = {
         ok: true,
         status: 200,
