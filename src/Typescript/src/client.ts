@@ -30,6 +30,7 @@ export class AuthZenClient implements IAuthZenClient {
   readonly pdpUrl: string;
   private readonly headers: Record<string, string>;
   private readonly timeout: number;
+  private _discoveryCache?: AuthZenConfiguration;
 
   constructor(config: AuthZenClientConfig) {
     this.pdpUrl = config.pdpUrl.replace(/\/$/, ''); // Remove trailing slash
@@ -63,7 +64,7 @@ export class AuthZenClient implements IAuthZenClient {
 
       const config = response as AuthZenConfiguration;
       this.validateDiscoveryConfiguration(config);
-      
+      this._discoveryCache = config;
       return config;
     } catch (error) {
       if (error instanceof AuthZenError) {
@@ -74,19 +75,55 @@ export class AuthZenClient implements IAuthZenClient {
   }
 
   /**
+   * Get cached discovery configuration or fetch new
+   */
+  private async getDiscovery(): Promise<AuthZenConfiguration> {
+    if (this._discoveryCache) return this._discoveryCache;
+    return await this.discover();
+  }
+
+  /**
    * Make a single access evaluation request
    */
   async evaluate(request: AccessEvaluationRequest): Promise<AccessEvaluationResponse> {
     this.validateEvaluationRequest(request);
 
+    let discovery = await this.getDiscovery();
+    let endpoint = discovery.access_evaluation_endpoint;
+    if (!endpoint || typeof endpoint !== 'string') {
+      throw new AuthZenDiscoveryError('Discovery configuration missing access_evaluation_endpoint');
+    }
+
+    // Always use absolute URI from discovery
+    let url = endpoint;
+
     try {
-      const response = await this.makeRequest('/access/v1/evaluation', {
+      const response = await this.makeRequest(url, {
         method: 'POST',
         body: JSON.stringify(request),
+        absolute: true,
       });
-
       return response as AccessEvaluationResponse;
-    } catch (error) {
+    } catch (error: any) {
+      // If 404, reacquire discovery and retry once
+      if (error instanceof AuthZenRequestError && error.statusCode === 404) {
+        discovery = await this.discover();
+        endpoint = discovery.access_evaluation_endpoint;
+        if (!endpoint || typeof endpoint !== 'string') {
+          throw new AuthZenDiscoveryError('Discovery configuration missing access_evaluation_endpoint');
+        }
+        url = endpoint;
+        try {
+          const response = await this.makeRequest(url, {
+            method: 'POST',
+            body: JSON.stringify(request),
+            absolute: true,
+          });
+          return response as AccessEvaluationResponse;
+        } catch (err: any) {
+          throw this.handleError(err, 'evaluate');
+        }
+      }
       throw this.handleError(error, 'evaluate');
     }
   }
@@ -97,23 +134,49 @@ export class AuthZenClient implements IAuthZenClient {
   async evaluations(request: AccessEvaluationsRequest): Promise<AccessEvaluationsResponse> {
     this.validateEvaluationsRequest(request);
 
+    let discovery = await this.getDiscovery();
+    let endpoint = discovery.access_evaluations_endpoint;
+    if (!endpoint || typeof endpoint !== 'string') {
+      throw new AuthZenDiscoveryError('Discovery configuration missing access_evaluations_endpoint');
+    }
+
+    let url = endpoint;
+
     try {
-      const response = await this.makeRequest('/access/v1/evaluations', {
+      const response = await this.makeRequest(url, {
         method: 'POST',
         body: JSON.stringify(request),
+        absolute: true,
       });
-
       return response as AccessEvaluationsResponse;
-    } catch (error) {
+    } catch (error: any) {
+      if (error instanceof AuthZenRequestError && error.statusCode === 404) {
+        discovery = await this.discover();
+        endpoint = discovery.access_evaluations_endpoint;
+        if (!endpoint || typeof endpoint !== 'string') {
+          throw new AuthZenDiscoveryError('Discovery configuration missing access_evaluations_endpoint');
+        }
+        url = endpoint;
+        try {
+          const response = await this.makeRequest(url, {
+            method: 'POST',
+            body: JSON.stringify(request),
+            absolute: true,
+          });
+          return response as AccessEvaluationsResponse;
+        } catch (err: any) {
+          throw this.handleError(err, 'evaluations');
+        }
+      }
       throw this.handleError(error, 'evaluations');
     }
   }
 
   /**
-   * Make an HTTP request to the PDP
+   * Make an HTTP request to the PDP or absolute endpoint
    */
-  private async makeRequest(endpoint: string, options: RequestInit): Promise<any> {
-    const url = `${this.pdpUrl}${endpoint}`;
+  private async makeRequest(endpoint: string, options: RequestInit & { absolute?: boolean }): Promise<any> {
+    const url = options.absolute ? endpoint : `${this.pdpUrl}${endpoint}`;
     const requestId = this.generateRequestId();
 
     // Create abort controller for timeout handling
@@ -133,16 +196,13 @@ export class AuthZenClient implements IAuthZenClient {
     };
 
     let response: Response;
-    
     try {
       response = await fetch(url, requestOptions);
     } catch (error: any) {
       clearTimeout(timeoutId);
-      
       if (error.name === 'AbortError') {
         throw new AuthZenNetworkError(`Request timeout after ${this.timeout}ms`, requestId);
       }
-      
       throw new AuthZenNetworkError(`Network error: ${error.message}`, requestId);
     } finally {
       clearTimeout(timeoutId);
@@ -151,7 +211,6 @@ export class AuthZenClient implements IAuthZenClient {
     // Handle non-JSON responses
     let responseData: any;
     const contentType = response.headers.get('content-type');
-    
     if (contentType && contentType.includes('application/json')) {
       try {
         responseData = await response.json();
