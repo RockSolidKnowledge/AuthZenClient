@@ -558,6 +558,281 @@ describe('AuthZenClient', () => {
       ],
     };
 
+    it('should call discover and use the absolute evaluations endpoint from discovery result on first evaluations', async () => {
+      const mockDiscoveryResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          policy_decision_point: 'https://example.com',
+          access_evaluations_endpoint: 'https://example.com/custom/evaluations', // absolute URI
+        }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mockEvaluationsResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ evaluations: [{ decision: true }, { decision: false }] }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      mockFetch
+        .mockResolvedValueOnce(mockDiscoveryResponse)
+        .mockResolvedValueOnce(mockEvaluationsResponse);
+
+      const client = new AuthZenClient({
+        pdpUrl: 'https://example.com',
+        token: 'test-token',
+      });
+
+      const response = await client.evaluations(validRequest);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.anything()
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://example.com/custom/evaluations',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(validRequest),
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer test-token',
+            'X-Request-ID': expect.stringMatching(/^authzen-\d+-[a-z0-9]+$/),
+          }),
+          signal: expect.any(AbortSignal),
+        })
+      );
+
+      expect(response).toEqual({ evaluations: [{ decision: true }, { decision: false }] });
+    });
+
+    it('should use cached discovery result for subsequent evaluations calls', async () => {
+      const mockDiscoveryResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          policy_decision_point: 'https://example.com',
+          access_evaluations_endpoint: 'https://example.com/custom/evaluations', // absolute URI
+        }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mockEvaluationsResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ evaluations: [{ decision: true }, { decision: false }] }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      // First call is discovery, then two evaluate calls
+      mockFetch
+        .mockResolvedValueOnce(mockDiscoveryResponse)
+        .mockResolvedValue(mockEvaluationsResponse);
+
+      const client = new AuthZenClient({
+        pdpUrl: 'https://example.com',
+        token: 'test-token',
+      });
+
+      const response1 = await client.evaluations(validRequest);
+      const response2 = await client.evaluations(validRequest);
+
+      // Only one discovery call
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.anything()
+      );
+
+      // Both evaluate calls use the absolute endpoint from discovery
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://example.com/custom/evaluations',
+        expect.anything()
+      );
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        3,
+        'https://example.com/custom/evaluations',
+        expect.anything()
+      );
+
+      expect(response1).toEqual({ evaluations: [{ decision: true }, { decision: false }] });
+      expect(response2).toEqual({ evaluations: [{ decision: true }, { decision: false }] });
+    });
+
+    it('should retry discovery and evaluations once if evaluations endpoint returns 404', async () => {
+      const mockDiscoveryResponse1 = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          policy_decision_point: 'https://example.com',
+          access_evaluations_endpoint: 'https://example.com/custom/evaluations',
+        }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mockDiscoveryResponse2 = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          policy_decision_point: 'https://example.com',
+          access_evaluations_endpoint: 'https://example.com/custom/evaluations2',
+        }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mock404Response = {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: jest.fn().mockResolvedValue({ message: 'Not Found' }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mockEvaluationsResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ evaluations: [{ decision: true }, { decision: false }] }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      // Sequence: discover, 404, discover, success
+      mockFetch
+        .mockResolvedValueOnce(mockDiscoveryResponse1) // initial discover
+        .mockResolvedValueOnce(mock404Response)        // first evaluations (404)
+        .mockResolvedValueOnce(mockDiscoveryResponse2) // retry discover
+        .mockResolvedValueOnce(mockEvaluationsResponse); // retry evaluations (success)
+
+      const client = new AuthZenClient({
+        pdpUrl: 'https://example.com',
+        token: 'test-token',
+      });
+
+      const response = await client.evaluations(validRequest);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.anything()
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://example.com/custom/evaluations',
+        expect.anything()
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        3,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.anything()
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        4,
+        'https://example.com/custom/evaluations2',
+        expect.anything()
+      );
+
+      expect(response).toEqual({ evaluations: [{ decision: true }, { decision: false }] });
+    });
+
+    it('should return error if evaluations endpoint returns 404 twice', async () => {
+      const mockDiscoveryResponse1 = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          policy_decision_point: 'https://example.com',
+          access_evaluations_endpoint: 'https://example.com/custom/evaluations',
+        }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mockDiscoveryResponse2 = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          policy_decision_point: 'https://example.com',
+          access_evaluations_endpoint: 'https://example.com/custom/evaluations2',
+        }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mock404Response = {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: jest.fn().mockResolvedValue({ message: 'Not Found' }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      // Sequence: discover, 404, discover, 404
+      mockFetch
+        .mockResolvedValueOnce(mockDiscoveryResponse1) // initial discover
+        .mockResolvedValueOnce(mock404Response)        // first evaluations (404)
+        .mockResolvedValueOnce(mockDiscoveryResponse2) // retry discover
+        .mockResolvedValueOnce(mock404Response);       // retry evaluations (404)
+
+      const client = new AuthZenClient({
+        pdpUrl: 'https://example.com',
+        token: 'test-token',
+      });
+
+      await expect(client.evaluations(validRequest)).rejects.toThrow(AuthZenRequestError);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.anything()
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://example.com/custom/evaluations',
+        expect.anything()
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        3,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.anything()
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        4,
+        'https://example.com/custom/evaluations2',
+        expect.anything()
+      );
+    });
+
     it('should make correct API call for batch evaluation', async () => {
       const mockResponse = {
         ok: true,
