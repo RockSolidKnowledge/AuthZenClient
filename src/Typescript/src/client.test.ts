@@ -94,6 +94,134 @@ describe('AuthZenClient', () => {
       resource: { type: 'document', id: '123' },
     };
 
+    it('should call discover and use the absolute evaluation endpoint from discovery result on first evaluate', async () => {
+      const mockDiscoveryResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          policy_decision_point: 'https://example.com',
+          access_evaluation_endpoint: 'https://example.com/custom/evaluate', // absolute URI
+        }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mockEvaluateResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ decision: true }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      // First call is discovery, second is evaluate
+      mockFetch
+        .mockResolvedValueOnce(mockDiscoveryResponse)
+        .mockResolvedValueOnce(mockEvaluateResponse);
+
+      const client = new AuthZenClient({
+        pdpUrl: 'https://example.com',
+        token: 'test-token',
+      });
+
+      const response = await client.evaluate(validRequest);
+
+      // First call: discovery
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.objectContaining({
+          method: 'GET',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer test-token',
+            'X-Request-ID': expect.stringMatching(/^authzen-\d+-[a-z0-9]+$/),
+          }),
+          signal: expect.any(AbortSignal),
+        })
+      );
+
+      // Second call: evaluate using absolute endpoint from discovery
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://example.com/custom/evaluate',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify(validRequest),
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer test-token',
+            'X-Request-ID': expect.stringMatching(/^authzen-\d+-[a-z0-9]+$/),
+          }),
+          signal: expect.any(AbortSignal),
+        })
+      );
+
+      expect(response).toEqual({ decision: true });
+    });
+
+    it('should use cached discovery result for subsequent evaluate calls', async () => {
+      const mockDiscoveryResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          policy_decision_point: 'https://example.com',
+          access_evaluation_endpoint: 'https://example.com/custom/evaluate', // absolute URI
+        }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mockEvaluateResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ decision: true }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      // First call is discovery, then two evaluate calls
+      mockFetch
+        .mockResolvedValueOnce(mockDiscoveryResponse)
+        .mockResolvedValue(mockEvaluateResponse);
+
+      const client = new AuthZenClient({
+        pdpUrl: 'https://example.com',
+        token: 'test-token',
+      });
+
+      const response1 = await client.evaluate(validRequest);
+      const response2 = await client.evaluate(validRequest);
+
+      // Only one discovery call
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/.well-known/authzen-configuration',
+        expect.anything()
+      );
+
+      // Both evaluate calls use the absolute endpoint from discovery
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://example.com/custom/evaluate',
+        expect.anything()
+      );
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        3,
+        'https://example.com/custom/evaluate',
+        expect.anything()
+      );
+
+      expect(response1).toEqual({ decision: true });
+      expect(response2).toEqual({ decision: true });
+    });
+
     it('should make correct API call for access evaluation', async () => {
       const mockResponse = {
         ok: true,

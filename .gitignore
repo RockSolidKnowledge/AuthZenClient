@@ -6,3 +6,6 @@ riderModule.iml
 **/.DS_Store
 
 src/CSharp/.idea/.idea.Rsk.AuthZen/.idea/
+
+src/Typescript/dist/
+src/Typescript/node_modules
