@@ -4,3 +4,5 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 **/.DS_Store
+
+src/CSharp/.idea/.idea.Rsk.AuthZen/.idea/
