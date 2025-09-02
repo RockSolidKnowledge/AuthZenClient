@@ -179,12 +179,6 @@ export class AuthZenClient implements IAuthZenClient {
     const url = options.absolute ? endpoint : `${this.pdpUrl}${endpoint}`;
     const requestId = this.generateRequestId();
 
-    // Create abort controller for timeout handling
-    const abortController = new AbortController();
-    const timeoutId = setTimeout(() => {
-      abortController.abort();
-    }, this.timeout);
-
     const requestOptions: RequestInit = {
       ...options,
       headers: {
@@ -192,20 +186,14 @@ export class AuthZenClient implements IAuthZenClient {
         'X-Request-ID': requestId,
         ...options.headers,
       },
-      signal: abortController.signal,
+      signal: AbortSignal.timeout(this.timeout),
     };
 
     let response: Response;
     try {
       response = await fetch(url, requestOptions);
     } catch (error: any) {
-      clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
-        throw new AuthZenNetworkError(`Request timeout after ${this.timeout}ms`, requestId);
-      }
       throw new AuthZenNetworkError(`Network error: ${error.message}`, requestId);
-    } finally {
-      clearTimeout(timeoutId);
     }
 
     // Handle non-JSON responses

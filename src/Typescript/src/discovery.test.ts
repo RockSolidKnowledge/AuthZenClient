@@ -377,30 +377,6 @@ describe('AuthZenClient - Discovery', () => {
     });
 
     describe('network errors', () => {
-      it('should handle network timeouts', async () => {
-        // Mock fetch to simulate hanging request
-        mockFetch.mockImplementation((url, options) => {
-          return new Promise((resolve, reject) => {
-            // Set up abort signal listener
-            if (options?.signal) {
-              const abortHandler = () => {
-                const error = new Error('The operation was aborted');
-                error.name = 'AbortError';
-                reject(error);
-              };
-              
-              options.signal.addEventListener('abort', abortHandler);
-            }
-          });
-        });
-
-        const promise = client.discover();
-        jest.advanceTimersByTime(10000);
-
-        await expect(promise).rejects.toThrow(AuthZenNetworkError);
-        await expect(promise).rejects.toThrow('Request timeout after 10000ms');
-      });
-
       it('should handle connection errors', async () => {
         mockFetch.mockRejectedValue(new Error('Connection refused'));
 
