@@ -246,26 +246,6 @@ export {
   runBasicExamples,
 };
 
-// Helper functions for creating common objects
-export function createUserSubject(id: string, properties?: Record<string, any>): Subject {
-  return { type: 'user', id, ...(properties && { properties }) };
-}
-
-export function createDocumentResource(id: string, properties?: Record<string, any>): Resource {
-  return { type: 'document', id, ...(properties && { properties }) };
-}
-
-export function createAction(name: string, properties?: Record<string, any>): Action {
-  return { name, ...(properties && { properties }) };
-}
-
-export function createContextWithTimestamp(additionalContext?: Record<string, any>): Context {
-  return {
-    time: new Date().toISOString(),
-    ...additionalContext,
-  };
-}
-
 // Run examples if this file is executed directly
 if (require.main === module) {
   runBasicExamples().catch(console.error);
