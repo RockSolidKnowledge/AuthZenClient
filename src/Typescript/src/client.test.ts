@@ -58,28 +58,6 @@ describe('AuthZenClient', () => {
 
       expect(client.pdpUrl).toBe('https://example.com');
     });
-
-  //   it('should set Authorization header when token provided', () => {
-  //     const client = new AuthZenClient({
-  //       pdpUrl: 'https://example.com',
-  //       token: 'test-token',
-  //     });
-
-  //     expect(client).toBeInstanceOf(AuthZenClient);
-
-  //     // Todo
-  //   });
-
-  //   it('should merge custom headers', () => {
-  //     const client = new AuthZenClient({
-  //       pdpUrl: 'https://example.com',
-  //       headers: { 'Custom-Header': 'test-value' },
-  //     });
-
-  //     expect(client).toBeInstanceOf(AuthZenClient);
-
-  //     // Todo
-  //   });
   });
 
   describe('evaluate', () => {
@@ -511,6 +489,54 @@ describe('AuthZenClient', () => {
       await expect(client.evaluate(invalidRequest)).rejects.toThrow(AuthZenValidationError);
       expect(mockFetch).not.toHaveBeenCalled();
     });
+
+    it('should include Authorization header with bearer token when provided', async () => {
+    const mockDiscoveryResponse = {
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({
+        policy_decision_point: 'https://example.com',
+        access_evaluation_endpoint: 'https://example.com/custom/evaluate',
+      }),
+      headers: {
+        get: jest.fn().mockReturnValue('application/json')
+      },
+    };
+
+    const mockEvaluateResponse = {
+      ok: true,
+      status: 200,
+      json: jest.fn().mockResolvedValue({ decision: true }),
+      headers: {
+        get: jest.fn().mockReturnValue('application/json')
+      },
+    };
+
+    mockFetch
+      .mockResolvedValueOnce(mockDiscoveryResponse)
+      .mockResolvedValueOnce(mockEvaluateResponse);
+
+    const client = new AuthZenClient({
+      pdpUrl: 'https://example.com',
+      token: 'my-secret-token',
+    });
+
+    await client.evaluate(validRequest);
+
+    // Second call: evaluate should include Authorization header
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      'https://example.com/custom/evaluate',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          'Authorization': 'Bearer my-secret-token',
+        }),
+        body: JSON.stringify(validRequest),
+        signal: expect.any(AbortSignal),
+      })
+    );
+  });
   });
 
   describe('evaluations', () => {
@@ -1044,6 +1070,53 @@ describe('AuthZenClient', () => {
 
       await expect(client.evaluations(requestWithDefaults)).resolves.toBeDefined();
       expect(mockFetch).toHaveBeenCalled();
+    });
+
+    it('should include Authorization header with bearer token when provided', async () => {
+      const mockDiscoveryResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          policy_decision_point: 'https://example.com',
+          access_evaluations_endpoint: 'https://example.com/custom/evaluations',
+        }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      const mockEvaluationsResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({ evaluations: [{ decision: true }, { decision: false }] }),
+        headers: {
+          get: jest.fn().mockReturnValue('application/json')
+        },
+      };
+
+      mockFetch
+        .mockResolvedValueOnce(mockDiscoveryResponse)
+        .mockResolvedValueOnce(mockEvaluationsResponse);
+
+      const client = new AuthZenClient({
+        pdpUrl: 'https://example.com',
+        token: 'my-evaluations-token',
+      });
+
+      await client.evaluations(validRequest);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://example.com/custom/evaluations',
+        expect.objectContaining({
+          method: 'POST',
+          headers: expect.objectContaining({
+            'Authorization': 'Bearer my-evaluations-token',
+          }),
+          body: JSON.stringify(validRequest),
+          signal: expect.any(AbortSignal),
+        })
+      );
     });
   });
 

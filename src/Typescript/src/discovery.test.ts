@@ -148,6 +148,41 @@ describe('AuthZenClient - Discovery', () => {
 
         expect(result).toEqual(mockConfig);
       });
+
+      it('should include Authorization header with bearer token when provided', async () => {
+        const mockDiscoveryResponse = {
+          ok: true,
+          status: 200,
+          json: jest.fn().mockResolvedValue({
+            policy_decision_point: 'https://example.com',
+            access_evaluation_endpoint: 'https://example.com/custom/evaluate',
+            access_evaluations_endpoint: 'https://example.com/custom/evaluations',
+          }),
+          headers: {
+            get: jest.fn().mockReturnValue('application/json')
+          },
+        };
+
+        mockFetch.mockResolvedValueOnce(mockDiscoveryResponse);
+
+        const client = new AuthZenClient({
+          pdpUrl: 'https://example.com',
+          token: 'my-discovery-token',
+        });
+
+        await client.discover();
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          'https://example.com/.well-known/authzen-configuration',
+          expect.objectContaining({
+            method: 'GET',
+            headers: expect.objectContaining({
+              'Authorization': 'Bearer my-discovery-token',
+            }),
+            signal: expect.any(AbortSignal),
+          })
+        );
+      });
     });
 
     describe('validation errors', () => {
