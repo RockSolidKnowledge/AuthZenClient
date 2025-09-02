@@ -59,28 +59,6 @@ describe('AuthZenClient', () => {
       expect(client.pdpUrl).toBe('https://example.com');
     });
 
-  //   it('should set default timeout to 10 seconds', () => {
-  //     const client = new AuthZenClient({
-  //       pdpUrl: 'https://example.com',
-  //     });
-
-  //     // We can't directly access timeout, but we can test it through behavior
-  //     expect(client).toBeInstanceOf(AuthZenClient);
-
-  //     // Todo
-  //   });
-
-  //   it('should set custom timeout when provided', () => {
-  //     const client = new AuthZenClient({
-  //       pdpUrl: 'https://example.com',
-  //       timeout: 5000,
-  //     });
-
-  //     expect(client).toBeInstanceOf(AuthZenClient);
-
-  //     // Todo
-  //   });
-
   //   it('should set Authorization header when token provided', () => {
   //     const client = new AuthZenClient({
   //       pdpUrl: 'https://example.com',

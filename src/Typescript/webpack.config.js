@@ -5,8 +5,10 @@ module.exports = {
     output: {
         path: path.join(__dirname, "dist"),
         filename: "index.js",
-        library: 'AuthZenClient',
-        libraryTarget: 'window',
+        library: {
+            'name': 'AuthZenClient',
+            'type': 'window'
+        }
     },
     module: {
         rules: [
