@@ -4,6 +4,7 @@
 name: .NET
 
 on:
+  workflow_dispatch: # Manual trigger
   push:
     branches: [ "main" ]
   pull_request:
