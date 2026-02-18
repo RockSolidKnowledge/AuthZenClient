@@ -17,6 +17,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Get version from git tag
+      id: version
+      run: |
+        VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.1-preview")
+        VERSION=${VERSION#v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -28,7 +36,7 @@ jobs:
     - name: Test
       run: dotnet test src/CSharp/Rsk.AuthZen.sln --no-build --verbosity normal --configuration Release
     - name: Pack NuGet Package
-      run: dotnet pack src/CSharp/Rsk.AuthZen.Client/Rsk.AuthZen.Client.csproj --configuration Release --no-build --output ./nupkgs
+      run: dotnet pack src/CSharp/Rsk.AuthZen.Client/Rsk.AuthZen.Client.csproj --configuration Release --no-build --output ./nupkgs -p:Version=${{ steps.version.outputs.version }}
     - name: Upload NuGet Package
       uses: actions/upload-artifact@v4
       with:
