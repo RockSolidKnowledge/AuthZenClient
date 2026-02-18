@@ -1,7 +1,7 @@
 {
-  "name": "authzen-client",
-  "version": "1.0.0",
-  "description": "TypeScript client library for AuthZen Authorization API",
+  "name": "@rocksolidknowledge/authzen-client",
+  "version": "0.0.1",
+  "description": "Client library for AuthZen Authorization API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -20,7 +20,7 @@
     "security",
     "typescript"
   ],
-  "author": "Your Name",
+  "author": "Rock Solid Knowledge",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.28.3",
@@ -44,6 +44,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/authzen-client.git"
-  }
+    "url": "https://github.com/RockSolidKnowledge/AuthZenClient.git"
+  },
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/RockSolidKnowledge/AuthZenClient/issues"
+  },
+  "homepage": "https://github.com/RockSolidKnowledge/AuthZenClient#readme"
 }

@@ -2560,7 +2560,7 @@ public class AuthZenClientTests
         await sut.Evaluate(evaluationRequest);
         var act = async () => await sut.Evaluate(evaluationRequest);
 
-        act.Should().ThrowAsync<AuthZenRequestFailureException>();
+        await act.Should().ThrowAsync<AuthZenRequestFailureException>();
         
         calls.Should().Be(5);
 
@@ -2811,8 +2811,8 @@ public class AuthZenClientTests
         
         await sut.Evaluate(evaluationRequest);
         var act = async () => await sut.Evaluate(evaluationRequest);
-
-        act.Should().ThrowAsync<AuthZenRequestFailureException>();
+        
+        await act.Should().ThrowAsync<AuthZenRequestFailureException>();
         
         calls.Should().Be(5);
 
