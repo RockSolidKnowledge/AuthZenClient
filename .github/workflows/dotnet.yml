@@ -24,6 +24,13 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore src/CSharp/Rsk.AuthZen.sln
     - name: Build
-      run: dotnet build src/CSharp/Rsk.AuthZen.sln --no-restore
+      run: dotnet build src/CSharp/Rsk.AuthZen.sln --no-restore --configuration Release
     - name: Test
-      run: dotnet test src/CSharp/Rsk.AuthZen.sln --no-build --verbosity normal
+      run: dotnet test src/CSharp/Rsk.AuthZen.sln --no-build --verbosity normal --configuration Release
+    - name: Pack NuGet Package
+      run: dotnet pack src/CSharp/Rsk.AuthZen.Client/Rsk.AuthZen.Client.csproj --configuration Release --no-build --output ./nupkgs
+    - name: Upload NuGet Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package
+        path: ./nupkgs/*.nupkg
