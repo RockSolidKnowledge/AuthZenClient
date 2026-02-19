@@ -20,7 +20,7 @@
     "security",
     "typescript"
   ],
-  "author": "Your Name",
+  "author": "Rock Solid Knowledge",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.28.3",
@@ -44,6 +44,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/authzen-client.git"
+    "url": "https://github.com/RockSolidKnowledge/AuthZenClient.git"
   }
 }
