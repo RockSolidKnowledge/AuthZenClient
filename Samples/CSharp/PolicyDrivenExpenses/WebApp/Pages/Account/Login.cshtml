@@ -1,0 +1,47 @@
+@page
+@model WebApp.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h1 class="h3 mb-4 text-center">Sign in</h1>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+                }
+
+                <form method="post" class="needs-validation" novalidate>
+                    <div class="mb-3">
+                        <label asp-for="Input.UserName" class="form-label">Username</label>
+                        <input asp-for="Input.UserName" class="form-control" autocomplete="username" />
+                        <span asp-validation-for="Input.UserName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Password" class="form-label">Password</label>
+                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="Input.RememberMe" class="form-check-input" />
+                        <label asp-for="Input.RememberMe" class="form-check-label">Remember me</label>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Sign in</button>
+                    </div>
+                </form>
+
+                <p class="text-body-secondary mt-4 mb-0 small text-center">
+                    Try <code>alice</code> or <code>bob</code> with password <code>Passw0rd!</code>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,9 @@
+namespace acmeCorp
+{
+     policyset global
+     {    
+         apply firstApplicable
+         policy expenses
+     }  
+}
+

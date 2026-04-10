@@ -1,0 +1,27 @@
+@page
+@model AuthZenPolicyServer.Pages.HomeModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<style>
+.alfa-keyword { color: #005cc5; font-weight: bold; }
+.alfa-literal { color: #032f62; }
+.alfa-number { color: #22863a; }
+.alfa-comment { color: #6a737d; font-style: italic; }
+.alfa-brace { color: #d73a49; font-weight: bold; }
+</style>
+
+<div class="container mt-5">
+    <h1 class="mb-4">Welcome to the AuthZen Policy Server</h1>
+    <p>This server is responsible for serving and managing the expense claim authorization decisions.</p>
+    @foreach (var policy in Model.PolicyFiles)
+    {
+        <h3 class="mt-5">Policy: <span class="text-primary">@policy.Name</span></h3>
+        <div class="card bg-light border-primary mt-3 mb-5">
+            <div class="card-body">
+                <pre class="mb-0 text-dark" style="white-space: pre-wrap; background: #f8f9fa; border-left: 5px solid #0d6efd; padding: 1em;"><code>@Html.Raw(Model.PolicyHtml(policy.Content))</code></pre>
+            </div>
+        </div>
+    }
+</div>

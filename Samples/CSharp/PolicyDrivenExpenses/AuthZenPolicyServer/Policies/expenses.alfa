@@ -1,0 +1,102 @@
+namespace acmeCorp
+{
+
+    import Oasis.Functions.*
+    import Oasis.Attributes.*
+    import Enforcer.AuthZen.*
+    
+    attribute ExpenseTotal { id ="total" type=money category=resourceCat}
+    attribute ApproverId { id ="approver" type=string category=resourceCat}
+     
+    //
+    // Policies for handling the creation, and approval of expense claims
+    //
+    policyset expenses
+    {
+       target clause ResourceType == "expenses"
+       apply denyUnlessPermit
+       
+       policy CreateExpenseClaim
+       policy SubmitExpenseClaim
+       policy ViewClaimsToApprove
+       policy ApproveAndRejectClaims
+    }
+    
+    policy CreateExpenseClaim {
+      target clause Action == "CreateClaim"
+      apply denyUnlessPermit
+    
+      rule CanCreateExpenseClaim { 
+          condition Role == "employee"
+          permit 
+      }
+    
+      on deny 
+      {
+          advice authZenContext
+          {
+              error = "Must be an employee to create a claim"
+          }
+      }
+    }
+              
+    policy SubmitExpenseClaim 
+    {
+      apply permitUnlessDeny
+
+      target clause Action == "SubmitClaim"
+      rule {
+          condition ExpenseTotal > 1000:money and Role == "employee"
+          deny
+          on deny 
+          {
+              advice authZenContext
+              {
+                  error = "Claim must be less than 1000 GBP"
+              }
+          }
+      }
+      rule { 
+            condition Role != "employee" 
+            deny
+
+          on deny 
+          {
+              advice authZenContext
+              {
+                  error = "Must be an employee to submit a claim"
+              }
+          }
+      }
+    }
+              
+    policy ViewClaimsToApprove
+     {
+         target clause Action == "ListClaimsToApprove"
+         apply denyUnlessPermit
+    
+         rule CanListClaims { 
+             condition Role == "manager"
+             permit 
+         }
+    
+         on deny 
+         {
+             advice authZenContext
+             {
+                 error = "Must be a manager to approve claims"
+             }
+         }
+    }
+             
+    policy ApproveAndRejectClaims
+    {
+       target clause Action == "AcceptClaim" or Action == "RejectClaim"
+       apply permitUnlessDeny
+       
+       rule {
+           condition Subject.Identifier != ApproverId and Role == "manager"
+           deny
+       }
+    }
+}
