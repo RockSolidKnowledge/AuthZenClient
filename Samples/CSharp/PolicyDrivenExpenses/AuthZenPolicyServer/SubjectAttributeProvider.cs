@@ -17,8 +17,9 @@ public class SubjectAttributeProvider : RecordAttributeValueProvider<AcmeCorpPer
         ["bob"] = new AcmeCorpPerson() { Roles = ["employee"]},
         ["alice"] = new AcmeCorpPerson() { Roles = ["employee","manager"]},
     };
-    
-    protected override async Task<AcmeCorpPerson> GetRecordValue(IAttributeResolver attributeResolver, CancellationToken ct)
+
+    protected override async Task<AcmeCorpPerson> GetRecordValue(IAttributeResolver attributeResolver,
+        CancellationToken ct)
     {
         IReadOnlyCollection<string>? identifiers = await attributeResolver
             .Resolve<string>(Rsk.Enforcer.Oasis.Attributes.Subject.Identifier, ct);
@@ -26,8 +27,11 @@ public class SubjectAttributeProvider : RecordAttributeValueProvider<AcmeCorpPer
         string? identifier = identifiers.SingleOrDefault();
         if (identifier == null) return null!;
 
-        AcmeCorpPerson person = new AcmeCorpPerson();
+        if (people.TryGetValue(identifier, out AcmeCorpPerson? person))
+        {
+            return person;
+        }
 
-        return people[identifier];
+        return null!;
     }
 }

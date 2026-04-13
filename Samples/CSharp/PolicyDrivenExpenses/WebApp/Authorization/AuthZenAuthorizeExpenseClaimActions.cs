@@ -97,8 +97,13 @@ public class AuthZenAuthorizeExpenseClaimActions(IAuthZenClient client) : IAutho
 
         if (success == false)
         {
-            string? error = 
-                JsonSerializer.Deserialize<JsonElement>(response.Context).GetProperty("error").GetString();
+            string? error = null;
+
+            if (JsonSerializer.Deserialize<JsonElement>(response.Context)
+                .TryGetProperty("error", out JsonElement errorProperty))
+            {
+                error = errorProperty.GetString();
+            }
 
             return new AuthorizeResult(false, [error ?? String.Empty]);
         }
