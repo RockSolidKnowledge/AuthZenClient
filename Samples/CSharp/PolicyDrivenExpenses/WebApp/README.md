@@ -10,14 +10,11 @@ This app uses ASP.NET Core Identity with an in-memory EF Core store and includes
 ## Run
 
 ```zsh
-cd /Users/andyclymer/git/AuthZenExample/WebApp
 dotnet run
 ```
 
-Then open the printed local URL and go to `/Account/Login`.
+Then and open  https://localhost:7255
 
 ## Notes
-
 - User data is in-memory only; restarting the app resets users and sessions.
-- `/secure` requires authentication.
 
