@@ -5,9 +5,7 @@ riderModule.iml
 /_ReSharper.Caches/
 **/.DS_Store
 
-src/CSharp/.idea/.idea.Rsk.AuthZen/.idea/
-
+.idea
+*.DotSettings.user
 src/Typescript/dist/
 src/Typescript/node_modules
-
-src/CSharp/.idea/

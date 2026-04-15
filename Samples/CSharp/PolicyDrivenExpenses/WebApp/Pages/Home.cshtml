@@ -1,0 +1,45 @@
+@page "/Home"
+@model WebApp.Pages.HomeModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-lg-5">
+                <h1 class="h2 mb-3">Expense Claims App</h1>
+                <p class="text-body-secondary mb-4">
+                    This application helps employees submit expense claims and enables assigned managers
+                    to review and approve or reject claims.
+                </p>
+
+                <h2 class="h5">What You Can Do</h2>
+                <ul class="mb-4">
+                    <li><strong>Create claims:</strong> Submit expense details including description, date, cost values, and cost centre.</li>
+                    <li><strong>Track open claims:</strong> View your submitted and rejected claims that are still open.</li>
+                    <li><strong>Approve assigned claims:</strong> If you are an approver, review claims assigned to you and process many at once.</li>
+                </ul>
+
+                <h2 class="h5">How Approval Works</h2>
+                <p class="mb-4">
+                    When a claim is submitted, the service assigns it to an approver using manager lookup.
+                    Approvers see only claims assigned to them on the Approve page.
+                </p>
+                
+                <h2 class="h5">Authorization Rules</h2>
+                <ul class="mb-4">
+                    <li>bob is an employee, he can submit expense claims</li>
+                    <li>expense claims have a limit of 1000</li>
+                    <li>alice is bob's manager she can approve or reject bobs expense claims</li>
+                </ul>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-primary" href="/Expenses/Create">Create Expense Claim</a>
+                    <a class="btn btn-outline-primary" href="/Expenses/Approve">Approve Claims</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
